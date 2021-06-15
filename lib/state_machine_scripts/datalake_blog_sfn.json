@@ -1,0 +1,70 @@
+{
+  "Comment": "State machine to run Glue ETL jobs",
+  "StartAt": "GlueRawJobRun",
+  "States": {
+    "GlueRawJobRun": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::glue:startJobRun.sync",
+      "Parameters": {
+        "JobName": "datalake_nyc_raw_load"
+      },
+      "Comment": "Stage to Raw data load",
+      "Catch":[
+        {
+          "ErrorEquals":[
+            "States.All"
+          ],
+          "Next":"NotifySNSError",
+          "ResultPath": "$.taskresult"
+        }
+      ],
+      "Next": "GlueConformedJobRun"
+    },
+    "GlueConformedJobRun": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::glue:startJobRun.sync",
+      "Parameters": {
+        "JobName": "datalake_nyc_conform_load"
+      },
+      "Comment": "Stage to Raw data load",
+      "Catch":[
+        {
+          "ErrorEquals":[
+            "States.All"
+          ],
+          "Next":"NotifySNSError",
+          "ResultPath": "$.taskresult"
+        }
+      ],
+      "Next": "NotifySNSSuccess"
+    },
+    "NotifySNSError": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::sns:publish",
+      "Parameters": {
+        "Message.$": "$",
+        "TopicArn": "arn:aws:sns:us-east-2:1234567890:dynamodb",
+        "Subject": "Blog job Failed"
+      },
+      "Next": "FailState"
+    },
+    "NotifySNSSuccess": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::sns:publish",
+      "Parameters": {
+        "Message.$": "$",
+        "TopicArn": "arn:aws:sns:us-east-2:1234567890:dynamodb",
+        "Subject": "Blog job Completed"
+      },
+      "Next": "Success"
+    },
+    "Success": {
+      "Type": "Succeed"
+    },
+    "FailState": {
+      "Type": "Fail",
+      "Cause": "Invalid response.",
+      "Error": "ErrorA"
+    }
+  }
+}

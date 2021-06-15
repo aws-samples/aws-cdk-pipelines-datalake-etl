@@ -1,0 +1,6 @@
+[
+  {
+    "load_name": "load_nyc_city_data",
+    "transfer_logic": "select * from datalake_blog_nyc_raw.datalake_nyc_raw"
+  }
+]

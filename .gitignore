@@ -1,0 +1,6 @@
+target/
+.settings/
+build/
+target/classes/
+*.xml
+.idea
