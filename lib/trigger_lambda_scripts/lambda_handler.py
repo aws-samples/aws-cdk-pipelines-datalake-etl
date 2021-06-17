@@ -14,10 +14,10 @@ def lambda_handler(event, context):
     :param context:
     :return:
     """
-    sfn_arn = os.environ['sfn_state_machine_arn']
+    sfn_arn = os.environ['SFN_STATE_MACHINE_ARN']
     sfn_client = boto3.client("stepfunctions")
     response = sfn_client.start_execution(stateMachineArn=sfn_arn)
     return {
         'statusCode': 200,
-        'body': json.dumps('Successfully exected Step Functions State Machine!')
+        'body': json.dumps('Successfully executed Step Functions State Machine!')
     }

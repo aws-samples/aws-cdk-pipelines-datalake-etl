@@ -131,7 +131,7 @@ Table below explains how this source ode structured:
   | *lib/glue_scripts*| ***To be added Zahid Muhammad Ali*** |
   | *lib/lambda_scripts* | ***To be added Zahid Muhammad Ali*** |
   | *lib/state_machine_scripts* | ***To be added Zahid Muhammad Ali*** |
-  | *lib/dynamo_db_config* | ***To be added Zahid Muhammad Ali*** |
+  | *lib/dynamodb_config* | ***To be added Zahid Muhammad Ali*** |
   | *resources*| This folder has architecture and process flow diagrams for Infrastructure and CDK Pipelines |
 
 ---
