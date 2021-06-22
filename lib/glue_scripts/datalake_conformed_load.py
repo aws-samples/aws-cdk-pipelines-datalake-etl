@@ -1,6 +1,3 @@
-# Copyright 2020 Amazon.com, Inc. or its affiliates. All Rights Reserved.
-# SPDX-License-Identifier: MIT-0
-
 import sys
 from awsglue.transforms import *
 
@@ -14,7 +11,7 @@ from awsglue.context import GlueContext
 from awsglue.job import Job
 from awsglue.dynamicframe import DynamicFrame
 ## @params: [JOB_NAME]
-args = getResolvedOptions(sys.argv, ['JOB_NAME','target_databasename','target_tablename','target_bucketname'])
+args = getResolvedOptions(sys.argv, ['JOB_NAME','target_databasename','target_tablename','target_bucketname','source_bucketname','source_key','source_system_name','base_file_name'])
 
 sc = SparkContext()
 glueContext = GlueContext(sc)
@@ -114,20 +111,28 @@ def main():
     month=datetime.today().month
     day=datetime.today().day
         
-
-    datasource0 = glueContext.create_dynamic_frame.from_catalog(database = "datalake_blog_nyc_stage", table_name = "nyc_taxi_data", transformation_ctx = "datasource0")
-    datasource0.show(5)
+    source_path="s3://" + args['source_bucketname'] + "/" + args['source_key'] + "/" + args["base_file_name"]  #yellow_tripdata_2020-12.csv"
+    print(source_path)
+    #datasource0 = glueContext.create_dynamic_frame.from_catalog(database = "datalake_blog_nyc_stage", table_name = "nyc_taxi_data", transformation_ctx = "datasource0")
+    df = spark.read.format("csv") \
+        .option("header", "true") \
+        .option("delimiter", ",") \
+        .option("inferSchema","true") \
+        .option("mode", "DROPMALFORMED") \
+        .load(source_path)
+    
+    # datasource0.show(5)
     
 
-    applymapping1 = ApplyMapping.apply(frame = datasource0, mappings = [("vendorid", "long", "vendorid", "long"), ("tpep_pickup_datetime", "string", "tpep_pickup_datetime", "string"), ("tpep_dropoff_datetime", "string", "tpep_dropoff_datetime", "string"), ("passenger_count", "long", "passenger_count", "long"), ("trip_distance", "double", "trip_distance", "double"), ("ratecodeid", "long", "ratecodeid", "long"), ("store_and_fwd_flag", "string", "store_and_fwd_flag", "string"), ("pulocationid", "long", "pulocationid", "long"), ("dolocationid", "long", "dolocationid", "long"), ("payment_type", "long", "payment_type", "long"), ("fare_amount", "double", "fare_amount", "double"), ("extra", "double", "extra", "double"), ("mta_tax", "double", "mta_tax", "double"), ("tip_amount", "double", "tip_amount", "double"), ("tolls_amount", "double", "tolls_amount", "double"), ("improvement_surcharge", "double", "improvement_surcharge", "double"), ("total_amount", "double", "total_amount", "double"), ("congestion_surcharge", "double", "congestion_surcharge", "double")], transformation_ctx = "applymapping1")
+    # applymapping1 = ApplyMapping.apply(frame = datasource0, mappings = [("vendorid", "long", "vendorid", "long"), ("tpep_pickup_datetime", "string", "tpep_pickup_datetime", "string"), ("tpep_dropoff_datetime", "string", "tpep_dropoff_datetime", "string"), ("passenger_count", "long", "passenger_count", "long"), ("trip_distance", "double", "trip_distance", "double"), ("ratecodeid", "long", "ratecodeid", "long"), ("store_and_fwd_flag", "string", "store_and_fwd_flag", "string"), ("pulocationid", "long", "pulocationid", "long"), ("dolocationid", "long", "dolocationid", "long"), ("payment_type", "long", "payment_type", "long"), ("fare_amount", "double", "fare_amount", "double"), ("extra", "double", "extra", "double"), ("mta_tax", "double", "mta_tax", "double"), ("tip_amount", "double", "tip_amount", "double"), ("tolls_amount", "double", "tolls_amount", "double"), ("improvement_surcharge", "double", "improvement_surcharge", "double"), ("total_amount", "double", "total_amount", "double"), ("congestion_surcharge", "double", "congestion_surcharge", "double")], transformation_ctx = "applymapping1")
 
-    resolvechoice2 = ResolveChoice.apply(frame = applymapping1, choice = "make_struct", transformation_ctx = "resolvechoice2")
+    # resolvechoice2 = ResolveChoice.apply(frame = applymapping1, choice = "make_struct", transformation_ctx = "resolvechoice2")
 
-    dropnullfields3 = DropNullFields.apply(frame = resolvechoice2, transformation_ctx = "dropnullfields3")
-    dropnullfields3.show(5)
+    # dropnullfields3 = DropNullFields.apply(frame = resolvechoice2, transformation_ctx = "dropnullfields3")
+    # dropnullfields3.show(5)
 
     
-    df=dropnullfields3.toDF()
+    # df=dropnullfields3.toDF()
     partition_path= "year={}/".format(year) + "month={}/".format(month) + "day={}/".format(day)
     target_s3_location="s3://" + args['target_bucketname']+"/datalake_blog/"
     storage_location=target_s3_location + args['target_tablename'] + "/" + partition_path
@@ -137,7 +142,9 @@ def main():
     
     dynamic_df=DynamicFrame.fromDF(df,glueContext,"table_df")
     
-    datasink4 = glueContext.write_dynamic_frame.from_options(frame = dropnullfields3, connection_type = "s3", connection_options = {"path": storage_location}, format = "parquet", transformation_ctx = "datasink4")
+    dynamic_df.show(5)
+    
+    datasink4 = glueContext.write_dynamic_frame.from_options(frame = dynamic_df, connection_type = "s3", connection_options = {"path": storage_location}, format = "parquet", transformation_ctx = "datasink4")
     job.commit()
     
 if __name__=="__main__":
