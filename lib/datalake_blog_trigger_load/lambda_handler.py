@@ -59,8 +59,8 @@ def lambda_handler(event, context):
     key = lambda_message['s3']['object']['key']
     
     p_full_path = key
-    p_source_system_name = key.split('/')[0]
-    p_table_name = key.split('/')[1]
+    p_source_system_name = key.split('/')[0]#first object/directorname after buckname will be used as source system name example: s3://<buckename>/<source_system_name>/<table_name>
+    p_table_name = key.split('/')[1]#second object/directorname after buckname will be used as tablename name example: s3://<buckename>/<source_system_name>/<table_name>
     p_file_dir = os.path.dirname(p_full_path)
     p_file_dir_upd = p_file_dir.replace("%3D","=")
     p_base_file_name = os.path.basename(p_full_path)
@@ -81,6 +81,15 @@ def lambda_handler(event, context):
         #Time stamp for the stepfunction name
         p_stp_fn_time = now.strftime("%Y%m%d%H%M%S%f")
         
+        p_year=now.strftime("%Y")
+        p_month=now.strftime("%m")
+        p_day=now.strftime("%d")
+        
+        logger.info('year: '+p_year)
+        logger.info('p_month: '+p_month)
+        logger.info('p_day: '+p_day)
+        
+        
         logger.info("sfn name:"+p_base_file_name +'-'+p_stp_fn_time)
         
         
@@ -99,6 +108,9 @@ def lambda_handler(event, context):
             '\",\"source_key\":\"' + p_file_dir_upd + \
             '\",\"source_system_name\":\"' + p_source_system_name + \
             '\",\"table_name\":\"' + p_table_name + \
+            '\",\"p_year\":\"' + p_year + \
+            '\",\"p_month\":\"' + p_month + \
+            '\",\"p_day\":\"' + p_day + \
             '\" }'
             
         logger.info(sfn_input)
