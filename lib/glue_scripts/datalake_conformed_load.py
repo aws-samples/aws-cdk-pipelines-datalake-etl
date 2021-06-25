@@ -1,6 +1,3 @@
-# Copyright 2020 Amazon.com, Inc. or its affiliates. All Rights Reserved.
-# SPDX-License-Identifier: MIT-0
-
 import sys
 from awsglue.transforms import *
 
@@ -146,6 +143,22 @@ def main():
     dynamic_df.show(5)
     mapped_dyF =  Map.apply(frame = dynamic_df, f = add_partition)
     df_final=mapped_dyF.toDF()
+    
+    # get dataframe schema
+    my_schema = list(df_final.schema)
+    
+    null_cols = []
+    
+    # iterate over schema list to filter for NullType columns
+    for st in my_schema:
+        if str(st.dataType) == 'NullType':
+            null_cols.append(st)
+    
+    # cast null type columns to string (or whatever you'd like)
+    for ncol in null_cols:
+        mycolname = str(ncol.name)
+        df_final = df_final \
+        .withColumn(mycolname, df_final[mycolname].cast('string'))
     
     df_final.write.partitionBy("year","month","day") \
         .format("parquet").save(storage_location, mode="overwrite")

@@ -131,7 +131,8 @@ def main():
     print("after clinet connection")
     table=client.Table(args['dynamodb_tablename'])
     print("table connected")
-    response = table.query(KeyConditionExpression=Key('load_name').eq("load_nyc_city_data"))
+    response = table.query(KeyConditionExpression=Key('load_name').eq(args['table_name']))
+    
     
     print(response)
     
@@ -146,7 +147,7 @@ def main():
         print(qry)
         df=sqlContext.sql(qry)
         
-
+        
         
         partition_path= "year={}/".format(args['p_year']) + "month={}/".format(args['p_month']) + "day={}/".format(args['p_day'])
         target_s3_location="s3://" + args['target_bucketname']+"/datalake_blog/"
@@ -156,6 +157,8 @@ def main():
         spark.conf.set("spark.sql.sources.partitionOverwriteMode","dynamic")
         spark.conf.set("hive.exec.dynamic.partition", "true")
         spark.conf.set("hive.exec.dynamic.partition.mode", "nonstrict")
+        
+        
         
         
         df.write.partitionBy("year","month","day") \
