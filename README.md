@@ -271,7 +271,69 @@ Pipeline you have created using CDK Pipelines module is self mutating. That mean
 
 ## Testing
 
+### Prerequistes:
+Below lists steps are required before starting the job testing:
+
+* For ETL job testing TLC Trip Record Data public data is being used, https://www1.nyc.gov/site/tlc/about/tlc-trip-record-data.page
+
+On the mentioned link multiple years of data is available, you can download data from 2020
+
+   *  Download Yellow Taxi Trip Records for August month from 2020. [Download data](https://nyc-tlc.s3.amazonaws.com/trip+data/yellow_tripdata_2020-08.csv)
+   * Make sure the transformation logic is entered in dynamodb for <> table. As part of job creation mentioned transformation logic will be used to transform data from raw to conform:
+
+   ```
+   SELECT count(*) count,coalesce(vendorid,-1)vendorid,day,month,year,pulocationid,dolocationid,      payment_type,sum(passenger_count)passenger_count,sum(trip_distance) total_trip_distance,sum(fare_amount)total_fare_amount,sum(extra)total_extra, sum(tip_amount)total_tip_amount,sum(tolls_amount)total_tolls_amount,sum(total_amount)total_amount
+   FROM "datalake_raw_source"."yellow_taxi_trip_record" 
+   group by vendorid,day,month,year,day,month,year,pulocationid,dolocationid,payment_type
+
+   ```
+   * Create a folder under raw bucket `{target_environment.lower()}-{resource_name_prefix}-{self.account}-{self.region}-raw` root path, this folder name will be used as source_system_name. You can use `tlc_taxi_data` or name of your choice.
+   * Go to the created folder and create child folder named `yellow_taxi_trip_record` or you can name it per your choice
+   * Make sure Athena has workgroup to execute queries for data validations. [Setting up Athena Workgroups](https://docs.aws.amazon.com/athena/latest/ug/workgroups-procedure.html) 
+   * Make sure Athena has S3 buckets for query results [Getting started](https://docs.aws.amazon.com/athena/latest/ug/getting-started.html)
+   
+### Steps for ETL testing:   
+
+1. Upload downloaded file `yellow_tripdata_2020-01.csv` to Raw bucket `s3://{target_environment.lower()}-{resource_name_prefix}-{self.account}-{self.region}-raw/tlc_taxi_data/yellow_taxi_trip_record/`
+1. Upon successful load of file S3 event notification will trigger the lambda
+1. Lambda will insert record into the dynamodb table `{target_environment.lower()}-{resource_name_prefix}-etl-job-audit` to track job start status
+1. Lambda function will trigger the step function. Step function name will be `<filename>-<YYYYMMDDHHMMSSxxxxxx>` and provided the required metadata input
+1. Step function will trigger the glue job for Raw to Conformed data processing.
+1. Glue job will load the data into conformed bucket using the provided metadata and data will be loaded to `s3://{target_environment.lower()}-{resource_name_prefix}-{self.account}-{self.region}-conformed/tlc_taxi_data/yellow_taxi_trip_record/year=YYYY/month=MM/day=DD` in parquet format
+1. Glue job will create/update the catalog table using the tablename passed as parameter based on folder name `yellow_taxi_trip_record` as being mentioned in prequisites 
+1. After raw to conform job completion purpose-built glue job will get triggered in step function
+1. Purpose built glue job will use the tranformation logic being provided in dynamodb as part of prerequistes for data transformation
+1. Purpose built glue job will store the result set in S3 bucket under `s3://{target_environment.lower()}-{resource_name_prefix}-{self.account}-{self.region}-purposebuilt/tlc_taxi_data/yellow_taxi_trip_record/year=YYYY/month=MM/day=DD`
+1. Purpose built glue job will create/update the catalog table
+1. After completion of glue job lambda will get triggered in step funtion to update the dynamodb table `{target_environment.lower()}-{resource_name_prefix}-etl-job-audit` with latest status
+1. SNS notification will be sent to the subscribed users
+1. To validate the data, please open Athena service and execute query. For testing purpose below mentioned query is being used 
+
+```
+SELECT * FROM "datablog_arg"."yellow_taxi_trip_record" limit 10;
+```
+
+For testing of `second data source`, download the Green Taxi Trip data [Data source](https://nyc-tlc.s3.amazonaws.com/trip+data/green_tripdata_2020-08.csv)
+
+Perform the prerequisites for second source, where create child folder `yellow_taxi_trip_record` under could be `tlc_taxi_data` in `s3://{target_environment.lower()}-{resource_name_prefix}-{self.account}-{self.region}-raw`
+
+For dynamodb transformation logic you can use the below mentioned query:
+
+```
+SELECT count(*) count,coalesce(vendorid,-1)vendorid,day,month,year,pulocationid,dolocationid,payment_type,sum(passenger_count)passenger_count,sum(trip_distance) total_trip_distance,sum(fare_amount)total_fare_amount,sum(extra)total_extra, sum(tip_amount)total_tip_amount,sum(tolls_amount)total_tolls_amount,sum(total_amount)total_amount
+FROM "datalake_raw_source"."green_taxi_record_data" 
+group by vendorid,day,month,year,day,month,year,pulocationid,dolocationid,payment_type
+```
+
+For testing follow the same above mentioned steps from 1-14 with respect to new source
+
+
+
+
+
 **To be added Zahid Muhammad Ali***
+
+
 
 ---
 

@@ -1,6 +1,14 @@
 [
   {
-    "load_name": "load_nyc_city_data",
-    "transfer_logic": "select * from datalake_blog_nyc_raw.datalake_nyc_raw"
+    "load_name": "yellow_taxi_trip_record",
+    "transfer_logic": "SELECT count(*) count,coalesce(vendorid,-1)vendorid,day,month,year,pulocationid,dolocationid,      payment_type,sum(passenger_count)passenger_count,sum(trip_distance) total_trip_distance,sum(fare_amount)total_fare_amount,sum(extra)total_extra, sum(tip_amount)total_tip_amount,sum(tolls_amount)total_tolls_amount,sum(total_amount)total_amount
+    FROM datalake_raw_source.yellow_taxi_trip_record 
+    group by vendorid,day,month,year,day,month,year,pulocationid,dolocationid,payment_type"
+  },
+  {
+    "load_name": "green_taxi_record_data",
+    "transfer_logic": "SELECT count(*) count,coalesce(vendorid,-1)vendorid,day,month,year,pulocationid,dolocationid,payment_type,sum(passenger_count)passenger_count,sum(trip_distance) total_trip_distance,sum(fare_amount)total_fare_amount,sum(extra)total_extra, sum(tip_amount)total_tip_amount,sum(tolls_amount)total_tolls_amount,sum(total_amount)total_amount
+    FROM datalake_raw_source.green_taxi_record_data 
+    group by vendorid,day,month,year,day,month,year,pulocationid,dolocationid,payment_type"
   }
 ]
