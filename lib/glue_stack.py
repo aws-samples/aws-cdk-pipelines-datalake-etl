@@ -11,9 +11,9 @@ import aws_cdk.aws_kms as kms
 import aws_cdk.aws_s3_deployment as s3_deployment
 
 from .configuration import (
-    ACCOUNT_ID, GLUE_CONNECTION_AVAILABILITY_ZONE, GLUE_CONNECTION_SUBNET, REGION,
-    S3_ACCESS_LOG_BUCKET, S3_KMS_KEY, S3_CONFORMED_BUCKET, S3_PURPOSE_BUILT_BUCKET, SHARED_SECURITY_GROUP_ID, get_environment_configuration,
-    get_logical_id_prefix, get_resource_name_prefix
+    GLUE_CONNECTION_AVAILABILITY_ZONE, GLUE_CONNECTION_SUBNET,
+    S3_ACCESS_LOG_BUCKET, S3_KMS_KEY, S3_CONFORMED_BUCKET, S3_PURPOSE_BUILT_BUCKET, SHARED_SECURITY_GROUP_ID,
+    get_environment_configuration, get_logical_id_prefix, get_resource_name_prefix
 )
 
 
@@ -30,7 +30,7 @@ class GlueStack(cdk.Stack):
         CloudFormation stack to create Glue Jobs, Connections,
         Script Bucket, Temporary Bucket, and an IAM Role for permissions.
 
-        @param scope cdk.Construct: Parent of this stack, usually an App or a Stage, but could be any construct.:
+        @param scope cdk.Construct: Parent of this stack, usually an App or a Stage, but could be any construct.
         @param construct_id str:
             The construct ID of this stack. If stackName is not explicitly defined,
             this id (and any parent IDs) will be used to determine the physical ID of the stack.

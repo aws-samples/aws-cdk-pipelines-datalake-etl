@@ -28,7 +28,7 @@ def main():
         aws_secret_access_key=secret_key,
         aws_session_token=session_token,
     )
-    table = dynamodb.Table(f'{target_environment}_{get_transformation_rules_table_name()}')
+    table = dynamodb.Table(get_transformation_rules_table_name(target_environment))
     with open('./lib/dynamodb_config/datalake_blog_conformed_logic.json') as json_file:
         records = json.load(json_file)
 

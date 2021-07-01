@@ -1,5 +1,9 @@
+# Copyright 2021 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# SPDX-License-Identifier: MIT-0
+
 import json
 import boto3
+import botocore
 import os
 import logging
 import os.path
@@ -9,33 +13,37 @@ import uuid
 
 
 def start_etl_job_run(execution_id, p_stp_fn_time, sfn_arn, sfn_name, table_name, sfn_input):
-    """function to start the new pipeline
-
+    """
+    Function to insert entry in dynamodb table for audit trail
+    @param execution_id:
+    @param p_stp_fn_time:
+    @param sfn_arn:
+    @param sfn_name:
+    @param table_name:
+    @param sfn_input:
     """
     try:
-        print("start_etl_job_run")
-        logger.info("[INFO] start_etl_job_run() called")
-
-        # current_time = datetime.datetime.utcnow()
-        # utc_time_iso = get_timestamp_iso(current_time)
-        # local_date_iso = get_local_date()
-
+        print('start_etl_job_run')
+        logger.info('[INFO] start_etl_job_run() called')
         item = {}
-        item["execution_id"] = execution_id
-        item["sfn_execution_name"] = sfn_name
-        item["sfn_arn"] = sfn_arn
-        item["sfn_input"] = sfn_input
-        item["job_latest_status"] = "started"
-        item["job_start_date"] = p_stp_fn_time
-        item["joblast_updated_timestamp"] = p_stp_fn_time
+        item['execution_id'] = execution_id
+        item['sfn_execution_name'] = sfn_name
+        item['sfn_arn'] = sfn_arn
+        item['sfn_input'] = sfn_input
+        item['job_latest_status'] = 'started'
+        item['job_start_date'] = p_stp_fn_time
+        item['joblast_updated_timestamp'] = p_stp_fn_time
         client = boto3.resource('dynamodb')
         table = client.Table(table_name)
         table.put_item(Item=item)
+    except botocore.exceptions.ClientError as error:
+        logger.info('[ERROR] Dynamodb process failed:{}'.format(error))
+        raise error
     except Exception as e:
-        logger.info("[ERROR] Dynamodb process failed:{}".format(e))
+        logger.info('[ERROR] Dynamodb process failed:{}'.format(e))
         raise e
-    logger.info("[INFO] start_etl_job_run() execution completed")
-    print("insert table completed")
+    logger.info('[INFO] start_etl_job_run() execution completed')
+    print('insert table completed')
 
 
 # Function for logger
@@ -43,6 +51,7 @@ def load_log_config():
     # Basic config. Replace with your own logging config if required
     root = logging.getLogger()
     root.setLevel(logging.INFO)
+
     return root
 
 
@@ -74,18 +83,18 @@ def lambda_handler(event, context):
     logger.info('File Path: ' + p_file_dir)
     logger.info('file base name: ' + p_base_file_name)
 
-    if p_base_file_name != "":
+    if p_base_file_name != '':
         # Capturing the current time in CST
         central = dateutil.tz.gettz('US/Central')
         now = datetime.now(tz=central)
-        p_ingest_time = now.strftime("%m/%d/%Y %H:%M:%S")
+        p_ingest_time = now.strftime('%m/%d/%Y %H:%M:%S')
         logger.info(p_ingest_time)
         # Time stamp for the stepfunction name
-        p_stp_fn_time = now.strftime("%Y%m%d%H%M%S%f")
+        p_stp_fn_time = now.strftime('%Y%m%d%H%M%S%f')
 
-        p_year = now.strftime("%Y")
-        p_month = now.strftime("%m")
-        p_day = now.strftime("%d")
+        p_year = now.strftime('%Y')
+        p_month = now.strftime('%m')
+        p_day = now.strftime('%d')
 
         logger.info('year: ' + p_year)
         logger.info('p_month: ' + p_month)
@@ -96,32 +105,41 @@ def lambda_handler(event, context):
         sfn_name = p_base_file_name + '-' + p_stp_fn_time
         print("before step function")
         sfn_arn = os.environ['sfn_arn']
-        sfn_client = boto3.client("stepfunctions")
 
         execution_id = str(uuid.uuid4())
-        sfn_input = '{\"source_bucketname\":\"' + bucket + \
-            '\",\"base_file_name\":\"' + p_base_file_name + \
-            '\",\"execution_id\":\"' + execution_id + \
-            '\",\"source_key\":\"' + p_file_dir_upd + \
-            '\",\"source_system_name\":\"' + p_source_system_name + \
-            '\",\"table_name\":\"' + p_table_name + \
-            '\",\"p_year\":\"' + p_year + \
-            '\",\"p_month\":\"' + p_month + \
-            '\",\"p_day\":\"' + p_day + \
-            '\" }'
+        sfn_input = json.dumps(
+            {
+                'source_bucketname': bucket,
+                'base_file_name': p_base_file_name,
+                'execution_id': execution_id,
+                'source_key': p_file_dir_upd,
+                'source_system_name': p_source_system_name,
+                'table_name': p_table_name,
+                'p_year': p_year,
+                'p_month': p_month,
+                'p_day': p_day,
+            }
+        )
 
         logger.info(sfn_input)
-
-        sfn_response = sfn_client.start_execution(
-            stateMachineArn=sfn_arn,
-            name=sfn_name,
-            input=sfn_input
-        )
-        print(sfn_response)
+        try:
+            sfn_client = boto3.client('stepfunctions')
+            sfn_response = sfn_client.start_execution(
+                stateMachineArn=sfn_arn,
+                name=sfn_name,
+                input=sfn_input
+            )
+            print(sfn_response)
+        except botocore.exceptions.ClientError as error:
+            logger.info('[ERROR] Step function client process failed:{}'.format(error))
+            raise error
+        except Exception as e:
+            logger.info('[ERROR] Step function call failed:{}'.format(e))
+            raise e
 
         start_etl_job_run(execution_id, p_stp_fn_time, sfn_arn, sfn_name, os.environ['dynamo_tablename'], sfn_input)
 
     return {
         'statusCode': 200,
-        'body': json.dumps('Hello from Lambda!')
+        'body': json.dumps('Step function triggered successfully!')
     }

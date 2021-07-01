@@ -9,8 +9,8 @@ from .configuration import (
 )
 
 
-def get_transformation_rules_table_name(resource_name_prefix: str) -> str:
-    return f'{resource_name_prefix}_etl_transformation_rules'
+def get_transformation_rules_table_name(target_environment, resource_name_prefix: str) -> str:
+    return f'{target_environment}_{resource_name_prefix}_etl_transformation_rules'
 
 
 class DynamoDbStack(cdk.Stack):
@@ -19,7 +19,7 @@ class DynamoDbStack(cdk.Stack):
         """
         CloudFormation stack to create DynamoDB Tables.
 
-        @param scope cdk.Construct: Parent of this stack, usually an App or a Stage, but could be any construct.:
+        @param scope cdk.Construct: Parent of this stack, usually an App or a Stage, but could be any construct.
         @param construct_id str:
             The construct ID of this stack. If stackName is not explicitly defined,
             this id (and any parent IDs) will be used to determine the physical ID of the stack.
@@ -41,10 +41,10 @@ class DynamoDbStack(cdk.Stack):
             'execution_id',
         )
 
-        transformation_table = get_transformation_rules_table_name(resource_name_prefix)
+        transformation_table = get_transformation_rules_table_name(target_environment, resource_name_prefix)
         self.transformation_rules_table = self.create_table(
             f'{target_environment}{logical_id_prefix}EtlTransformationRulesTable',
-            f'{target_environment}-{transformation_table}',
+            transformation_table,
             'load_name',
         )
 

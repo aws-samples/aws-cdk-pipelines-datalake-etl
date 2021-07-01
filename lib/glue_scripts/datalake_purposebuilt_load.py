@@ -10,9 +10,6 @@ from awsglue.job import Job
 import boto3
 from boto3.dynamodb.conditions import Key
 from pyspark.sql import HiveContext
-from awsglue.dynamicframe import DynamicFrame
-
-from datetime import datetime
 import botocore
 
 
@@ -37,6 +34,8 @@ args = getResolvedOptions(
 
 
 sc = SparkContext()
+hadoop_conf = sc._jsc.hadoopConfiguration()
+hadoop_conf.set('fs.s3.impl', 'org.apache.hadoop.fs.s3a.S3AFileSystem')
 glueContext = GlueContext(sc)
 spark = glueContext.spark_session
 job = Job(glueContext)
@@ -45,6 +44,11 @@ sqlContext = HiveContext(sc)
 
 
 def table_exists(target_database, table_name):
+    """
+    Function to check if table exists returns true/false
+    @param target_database:
+    @param table_name:
+    """
     try:
         glue_client = boto3.client('glue')
         glue_client.get_table(DatabaseName=target_database, Name=table_name)
@@ -54,6 +58,9 @@ def table_exists(target_database, table_name):
 
 
 def create_database():
+    """
+    Function to create catalog database if does not exists
+    """
     response = None
     glue_client = boto3.client('glue')
     database_name = args['target_databasename']
@@ -81,6 +88,14 @@ def create_database():
 
 
 def upsert_catalog_table(df, target_database, table_name, classification, storage_location):
+    """
+    Function to upsert catalog table
+    @param df:
+    @param target_database:
+    @param table_name:
+    @param classification:
+    @param storage_location:
+    """
     create_database()
     df_schema = df.dtypes
     schema = []
@@ -99,7 +114,9 @@ def upsert_catalog_table(df, target_database, table_name, classification, storag
     input_format = 'org.apache.hadoop.hive.ql.io.parquet.MapredParquetInputFormat'
     output_format = 'org.apache.hadoop.hive.ql.io.parquet.MapredParquetOutputFormat'
     serde_info = {
-        'Parameters': {'serialization.format': '1'},
+        'Parameters': {
+            'serialization.format': '1'
+        },
         'SerializationLibrary': 'org.apache.hadoop.hive.ql.io.parquet.serde.ParquetHiveSerDe'
     }
     storage_descriptor = {
@@ -113,7 +130,7 @@ def upsert_catalog_table(df, target_database, table_name, classification, storag
     partition_key = [
         {'Name': 'year', 'Type': 'string'},
         {'Name': 'month', 'Type': 'string'},
-        {'Name': 'day', 'Type': 'string'}
+        {'Name': 'day', 'Type': 'string'},
     ]
     table_input = {
         'Name': table_name,
@@ -128,17 +145,26 @@ def upsert_catalog_table(df, target_database, table_name, classification, storag
         'PartitionKeys': partition_key
     }
 
-    glue_client = boto3.client('glue')
-
-    if not table_exists(target_database, table_name):
-        print('[INFO] Target Table name: {} does not exist.'.format(table_name))
-        glue_client.create_table(DatabaseName=target_database, TableInput=table_input)
-    else:
-        print('[INFO] Trying to update: TargetTable: {}'.format(table_name))
-        glue_client.update_table(DatabaseName=target_database, TableInput=table_input)
+    try:
+        glue_client = boto3.client('glue')
+        if not table_exists(target_database, table_name):
+            print('[INFO] Target Table name: {} does not exist.'.format(table_name))
+            glue_client.create_table(DatabaseName=target_database, TableInput=table_input)
+        else:
+            print('[INFO] Trying to update: TargetTable: {}'.format(table_name))
+            glue_client.update_table(DatabaseName=target_database, TableInput=table_input)
+    except botocore.exceptions.ClientError as error:
+        print('[ERROR] Glue job client process failed:{}'.format(error))
+        raise error
+    except Exception as e:
+        print('[ERROR] Glue job function call failed:{}'.format(e))
+        raise e
 
 
 def add_partition(rec):
+    """
+    Function to add partition
+    """
     partition_path = '{}/'.format(args['p_year']) + '{}/'.format(args['p_month']) + '{}/'.format(args['p_day'])
     rec['year'] = args['p_year']
     rec['month'] = args['p_month']
@@ -150,7 +176,7 @@ def add_partition(rec):
 
 def main():
     client = boto3.resource('dynamodb')
-    print('after clinet connection')
+    print('after client connection')
     table = client.Table(args['dynamodb_tablename'])
     print('table connected')
     response = table.query(KeyConditionExpression=Key('load_name').eq(args['table_name']))
@@ -176,8 +202,7 @@ def main():
         spark.conf.set('hive.exec.dynamic.partition', 'true')
         spark.conf.set('hive.exec.dynamic.partition.mode', 'nonstrict')
 
-        df.write.partitionBy('year', 'month', 'day') \
-            .format('parquet').save(storage_location, mode='overwrite')
+        df.write.partitionBy('year', 'month', 'day').format('parquet').save(storage_location, mode='overwrite')
 
         target_table_name = args['target_databasename'] + '.' + args['table_name']
         spark.sql(f'ALTER TABLE {target_table_name} RECOVER PARTITIONS')
