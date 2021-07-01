@@ -1,8 +1,9 @@
-# Copyright 2020 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# Copyright 2021 Amazon.com, Inc. or its affiliates. All Rights Reserved.
 # SPDX-License-Identifier: MIT-0
 
 import os
 import aws_cdk.core as cdk
+import aws_cdk.aws_dynamodb as dynamodb
 import aws_cdk.aws_ec2 as ec2
 import aws_cdk.aws_glue as glue
 import aws_cdk.aws_iam as iam
@@ -15,73 +16,102 @@ import aws_cdk.aws_stepfunctions_tasks as stepfunctions_tasks
 
 from .configuration import (
     AVAILABILITY_ZONES, ROUTE_TABLES, S3_RAW_BUCKET, SUBNET_IDS,
-    SHARED_SECURITY_GROUP_ID, VPC_ID, get_logical_id_prefix,
-    get_mappings, get_resource_name_prefix, get_ssm_parameter
+    SHARED_SECURITY_GROUP_ID, VPC_ID, get_environment_configuration,
+    get_logical_id_prefix, get_resource_name_prefix
 )
 
 
 class StepFunctionsStack(cdk.Stack):
     def __init__(
-        self, app: cdk.App, id: str, target_environment: str,
+        self, scope: cdk.Construct, construct_id: str, target_environment: str,
         raw_to_conformed_job: glue.CfnJob, conformed_to_purpose_built_job: glue.CfnJob,
+        job_audit_table: dynamodb.Table,
         **kwargs
     ) -> None:
-        super().__init__(app, id, **kwargs)
+        """
+        CloudFormation stack to create Step Functions, Lambdas, and SNS notification Topics, 
 
-        self.mappings = get_mappings()[target_environment]
+        @param scope cdk.Construct: Parent of this stack, usually an App or a Stage, but could be any construct.:
+        @param construct_id str:
+            The construct ID of this stack. If stackName is not explicitly defined,
+            this id (and any parent IDs) will be used to determine the physical ID of the stack.
+        @param target_environment str: The target environment for stacks in the deploy stage
+        @param raw_to_conformed_job glue.CfnJob: The glue job to invoke
+        @param conformed_to_purpose_built_job glue.CfnJob: The glue job to invoke
+        @param job_audit_table dynamodb.Table: The DynamoDB Table for storing Job Audit results
+        @param kwargs:
+        """
+        super().__init__(scope, construct_id, **kwargs)
+
+        self.mappings = get_environment_configuration(target_environment)
         logical_id_prefix = get_logical_id_prefix()
         resource_name_prefix = get_resource_name_prefix()
 
-        vpc_id = get_ssm_parameter(self.mappings[VPC_ID])
-        shared_security_group_parameter = get_ssm_parameter(self.mappings[SHARED_SECURITY_GROUP_ID])
-        availability_zones_parameter = get_ssm_parameter(self.mappings[AVAILABILITY_ZONES])
-        availability_zones = availability_zones_parameter.split(',')
-        subnet_ids_parameter = get_ssm_parameter(self.mappings[SUBNET_IDS])
-        subnet_ids = subnet_ids_parameter.split(',')
-        route_tables_parameter = get_ssm_parameter(self.mappings[ROUTE_TABLES])
-        route_tables = route_tables_parameter.split(',')
-        # Manually construct the VPC because it lives in the target account, not the Deployment Util account where the synth is ran
-        vpc = ec2.Vpc.from_vpc_attributes(self, f'ImportedVpc',
+        vpc_id = cdk.Fn.importValue(self.mappings[VPC_ID])
+        shared_security_group_output = cdk.Fn.importValue(self.mappings[SHARED_SECURITY_GROUP_ID])
+        availability_zones_output = cdk.Fn.importValue(self.mappings[AVAILABILITY_ZONES])
+        subnet_ids_output = cdk.Fn.importValue(self.mappings[SUBNET_IDS])
+        route_tables_output = cdk.Fn.importValue(self.mappings[ROUTE_TABLES])
+        # Manually construct the VPC because it lives in the target account,
+        # not the Deployment Util account where the synth is ran
+        vpc = ec2.Vpc.from_vpc_attributes(
+            self,
+            'ImportedVpc',
             vpc_id=vpc_id,
-            availability_zones=availability_zones,
-            private_subnet_ids=subnet_ids,
-            private_subnet_route_table_ids=route_tables,
+            availability_zones=availability_zones_output,
+            private_subnet_ids=subnet_ids_output,
+            private_subnet_route_table_ids=route_tables_output,
         )
-        shared_security_group = ec2.SecurityGroup.from_security_group_id(self, f'ImportedSecurityGroup',
-            shared_security_group_parameter
+        shared_security_group = ec2.SecurityGroup.from_security_group_id(
+            self,
+            'ImportedSecurityGroup',
+            shared_security_group_output
         )
-        raw_bucket_name = get_ssm_parameter(self.mappings[S3_RAW_BUCKET])
+        raw_bucket_name = cdk.Fn.importValue(self.mappings[S3_RAW_BUCKET])
         raw_bucket = s3.Bucket.from_bucket_name(self, id='ImportedRawBucket', bucket_name=raw_bucket_name)
 
         notification_topic = sns.Topic(self, f'{target_environment}{logical_id_prefix}EtlFailedTopic')
 
-        fail_state = stepfunctions.Fail(self, f'{target_environment}{logical_id_prefix}EtlFailedState',
+        fail_state = stepfunctions.Fail(
+            self,
+            f'{target_environment}{logical_id_prefix}EtlFailedState',
             cause='Invalid response.',
             error='Error'
         )
         success_state = stepfunctions.Succeed(self, f'{target_environment}{logical_id_prefix}EtlSucceededState')
 
-        error_task = stepfunctions_tasks.SnsPublish(self, f'{target_environment}{logical_id_prefix}EtlErrorPublishTask',
+        error_task = stepfunctions_tasks.SnsPublish(
+            self,
+            f'{target_environment}{logical_id_prefix}EtlErrorPublishTask',
             topic=notification_topic,
             subject='Job Completed',
             message=stepfunctions.TaskInput.from_data_at('$')
         )
         error_task.next(fail_state)
 
-        success_task = stepfunctions_tasks.SnsPublish(self, f'{target_environment}{logical_id_prefix}EtlErrorPublishTask',
+        success_task = stepfunctions_tasks.SnsPublish(
+            self,
+            f'{target_environment}{logical_id_prefix}EtlErrorPublishTask',
             topic=notification_topic,
             subject='Job Failed',
             message=stepfunctions.TaskInput.from_data_at('$')
         )
         success_task.next(success_state)
 
-        glue_raw_task = stepfunctions_tasks.GlueStartJobRun(self, f'{target_environment}{logical_id_prefix}GlueRawJobTask',
+        glue_raw_task = stepfunctions_tasks.GlueStartJobRun(
+            self,
+            f'{target_environment}{logical_id_prefix}GlueRawJobTask',
             glue_job_name=raw_to_conformed_job.name,
+            arguments=stepfunctions.TaskInput.from_data_at(
+
+            ),
             comment='Stage to Raw data load',
         )
         glue_raw_task.add_catch(error_task, result_path='$.taskresult')
 
-        glue_conformed_task = stepfunctions_tasks.GlueStartJobRun(self, f'{target_environment}{logical_id_prefix}GlueConformedJobTask',
+        glue_conformed_task = stepfunctions_tasks.GlueStartJobRun(
+            self,
+            f'{target_environment}{logical_id_prefix}GlueConformedJobTask',
             glue_job_name=conformed_to_purpose_built_job.name,
             comment='Raw to Conformed data load',
         )
@@ -91,17 +121,22 @@ class StepFunctionsStack(cdk.Stack):
             glue_conformed_task.next(success_task)
         )
 
-        machine = stepfunctions.StateMachine(self, f'{target_environment}{logical_id_prefix}EtlStateMachine',
+        machine = stepfunctions.StateMachine(
+            self,
+            f'{target_environment}{logical_id_prefix}EtlStateMachine',
             state_machine_name=f'{target_environment.lower()}-{resource_name_prefix}-etl',
             definition=machine_definition,
         )
 
-        trigger_function = _lambda.Function(self, id, f'{target_environment}{logical_id_prefix}EtlTrigger',
+        trigger_function = _lambda.Function(
+            self,
+            f'{target_environment}{logical_id_prefix}EtlTrigger',
             function_name=f'{target_environment.lower()}-{resource_name_prefix}-etl-trigger',
             runtime=_lambda.Runtime.PYTHON_3_8,
             handler='lambda_handler.lambda_handler',
             code=_lambda.Code.from_asset(f'{os.path.dirname(__file__)}/trigger_lambda_scripts'),
             environment={
+                'DYNAMODB_TABLE_NAME': job_audit_table.table_name,
                 'SFN_STATE_MACHINE_ARN': machine.state_machine_arn,
             },
             security_groups=[shared_security_group],
