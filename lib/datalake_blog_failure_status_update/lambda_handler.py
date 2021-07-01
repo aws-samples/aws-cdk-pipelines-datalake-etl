@@ -1,5 +1,9 @@
+# Copyright 2021 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# SPDX-License-Identifier: MIT-0
+
 import json
 import boto3
+import botocore
 import os
 import logging
 import os.path
@@ -41,22 +45,29 @@ def lambda_handler(event, context):
     p_stp_fn_time = now.strftime("%Y%m%d%H%M%S%f")
     # update table
     
-    client = boto3.resource('dynamodb')
-    table = client.Table(os.environ['dynamo_tablename'])
-    table.update_item(
-        Key={
-            'execution_id': execution_id
-        },
-        UpdateExpression="set joblast_updated_timestamp=:lut,job_latest_status=:sts,error_message=:emsg",
-        ExpressionAttributeValues={
-            ':sts': status,
-            ':lut': p_stp_fn_time,
-            ':emsg':error_msg
-        },
-        ReturnValues="UPDATED_NEW"
-        )
-        
+    try:
+        client = boto3.resource('dynamodb')
+        table = client.Table(os.environ['dynamo_tablename'])
+        table.update_item(
+            Key={
+                'execution_id': execution_id
+            },
+            UpdateExpression="set joblast_updated_timestamp=:lut,job_latest_status=:sts,error_message=:emsg",
+            ExpressionAttributeValues={
+                ':sts': status,
+                ':lut': p_stp_fn_time,
+                ':emsg':error_msg
+            },
+            ReturnValues="UPDATED_NEW"
+            )
+    except botocore.exceptions.ClientError as error:
+        logger.info("[ERROR] Step function client process failed:{}".format(error))
+        raise error
+    except Exception as e:
+        logger.info("[ERROR] Step function call failed:{}".format(e))
+        raise e
+            
     return {
         'statusCode': 200,
-        'body': json.dumps('Hello from Lambda!')
+        'body': json.dumps('Failure status update!')
     }

@@ -1,5 +1,9 @@
+# Copyright 2021 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# SPDX-License-Identifier: MIT-0
+
 import json
 import boto3
+import botocore
 import os
 import logging
 import os.path
@@ -9,19 +13,20 @@ import dateutil.tz
 import uuid
 
 
-def statr_etl_job_run(execution_id,p_stp_fn_time,sfn_arn,sfn_name,table_name,sfn_input):
-    """function to start the new pipeline
+def start_etl_job_run(execution_id,p_stp_fn_time,sfn_arn,sfn_name,table_name,sfn_input):
+    """
+    Function to insert entry in dynamodb table for audit trail
+    @param execution_id: 
+    @param p_stp_fn_time: 
+    @param sfn_arn: 
+    @param sfn_name: 
+    @param table_name: 
+    @param sfn_input:
         
     """
     try:
         print("statr_etl_job_run")
         logger.info("[INFO] statr_etl_job_run() called")
-        
-        # current_time = datetime.datetime.utcnow()
-        # utc_time_iso = get_timestamp_iso(current_time)
-        # local_date_iso = get_local_date()
-
-        
         item = {}
         item["execution_id"] = execution_id
         item["sfn_execution_name"] = sfn_name
@@ -33,9 +38,13 @@ def statr_etl_job_run(execution_id,p_stp_fn_time,sfn_arn,sfn_name,table_name,sfn
         client = boto3.resource('dynamodb')
         table = client.Table(table_name)
         table.put_item(Item=item)
+    except botocore.exceptions.ClientError as error:
+        logger.info("[ERROR] Dynamodb process failed:{}".format(error))
+        raise error
     except Exception as e:
         logger.info("[ERROR] Dynamodb process failed:{}".format(e))
         raise e
+        
     logger.info("[INFO] statr_etl_job_run() execution completed")
     print("insert table completed")
 
@@ -98,7 +107,7 @@ def lambda_handler(event, context):
         sfn_name= p_base_file_name +'-'+p_stp_fn_time
         print("befor step function")
         sfn_arn = os.environ['sfn_arn']
-        sfn_client=boto3.client("stepfunctions")
+        
         
         
         execution_id = str(uuid.uuid4())
@@ -114,15 +123,22 @@ def lambda_handler(event, context):
             '\" }'
             
         logger.info(sfn_input)
-        
-        sfn_response=sfn_client.start_execution(stateMachineArn=sfn_arn,
-            name = sfn_name,
-            input=sfn_input)
-        print(sfn_response)
-        
-        statr_etl_job_run(execution_id,p_stp_fn_time,sfn_arn,sfn_name,os.environ['dynamo_tablename'],sfn_input)
+        try:
+            sfn_client=boto3.client("stepfunctions")
+            sfn_response=sfn_client.start_execution(stateMachineArn=sfn_arn,
+                name = sfn_name,
+                input=sfn_input)
+            print(sfn_response)
+        except botocore.exceptions.ClientError as error:
+            logger.info("[ERROR] Step function client process failed:{}".format(error))
+            raise error
+        except Exception as e:
+            logger.info("[ERROR] Step function call failed:{}".format(e))
+            raise e
+            
+        start_etl_job_run(execution_id,p_stp_fn_time,sfn_arn,sfn_name,os.environ['dynamo_tablename'],sfn_input)
         
     return {
         'statusCode': 200,
-        'body': json.dumps('Hello from Lambda!')
+        'body': json.dumps('Step function triggered successfully!')
     }

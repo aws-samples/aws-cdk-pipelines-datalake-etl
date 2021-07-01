@@ -128,10 +128,11 @@ Table below explains how this source ode structured:
   | [lambda_stack](aws_cdk_pipelines_blog_datalake_infrastructure/vpc_stack.py) | ***To be added by Isaiah Grant*** |
   | [sfn_stack](aws_cdk_pipelines_blog_datalake_infrastructure/sfn_stack.py) | ***To be added by Isaiah Grant*** |
   | [sns_stack](aws_cdk_pipelines_blog_datalake_infrastructure/sns_stack.py) | ***To be added by Isaiah Grant*** |
-  | *lib/glue_scripts*| ***To be added Zahid Muhammad Ali*** |
-  | *lib/lambda_scripts* | ***To be added Zahid Muhammad Ali*** |
-  | *lib/state_machine_scripts* | ***To be added Zahid Muhammad Ali*** |
-  | *lib/dynamodb_config* | ***To be added Zahid Muhammad Ali*** |
+  | *lib/glue_scripts*| Glue spark job data processing logic for conform and purposebuilt layers |
+  | *lib/datalake_blog_failure_status_update* | lambda script to update dynamodb in case of glue job failure  |
+  | *lib/datalake_blog_success_status_update* | lambda script to update dynamodb for successful glue job execution |
+  *lib/datalake_blog_trigger_load* | lambda script to trigger step function and intiate dynamodb |
+  | *lib/dynamodb_config* | Transformation logic to be used for data processing from conform to purpose built |
   | *resources*| This folder has architecture and process flow diagrams for Infrastructure and CDK Pipelines |
 
 ---
