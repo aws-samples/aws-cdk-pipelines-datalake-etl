@@ -11,7 +11,7 @@ import aws_cdk.aws_kms as kms
 import aws_cdk.aws_s3_deployment as s3_deployment
 
 from .configuration import (
-    GLUE_CONNECTION_AVAILABILITY_ZONE, GLUE_CONNECTION_SUBNET,
+    AVAILABILITY_ZONE_1, SUBNET_ID_1,
     S3_ACCESS_LOG_BUCKET, S3_KMS_KEY, S3_CONFORMED_BUCKET, S3_PURPOSE_BUILT_BUCKET, SHARED_SECURITY_GROUP_ID,
     get_environment_configuration, get_logical_id_prefix, get_resource_name_prefix
 )
@@ -53,8 +53,8 @@ class GlueStack(cdk.Stack):
         s3_kms_key_parameter = cdk.Fn.importValue(self.mappings[S3_KMS_KEY])
         s3_kms_key = kms.Key.from_key_arn(self, 'ImportedKmsKey', s3_kms_key_parameter)
         shared_security_group_parameter = cdk.Fn.importValue(self.mappings[SHARED_SECURITY_GROUP_ID])
-        glue_connection_subnet = cdk.Fn.importValue(self.mappings[GLUE_CONNECTION_SUBNET])
-        glue_connection_availability_zone = cdk.Fn.importValue(self.mappings[GLUE_CONNECTION_AVAILABILITY_ZONE])
+        glue_connection_subnet = cdk.Fn.importValue(self.mappings[SUBNET_ID_1])
+        glue_connection_availability_zone = cdk.Fn.importValue(self.mappings[AVAILABILITY_ZONE_1])
 
         conformed_bucket_name = cdk.Fn.importValue(self.mappings[S3_CONFORMED_BUCKET])
         conformed_bucket = s3.Bucket.from_bucket_name(
