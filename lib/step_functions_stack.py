@@ -78,7 +78,7 @@ class StepFunctionsStack(cdk.Stack):
             function_name=f'{target_environment.lower()}-{resource_name_prefix}-etl-failure-status-update',
             runtime=_lambda.Runtime.PYTHON_3_8,
             handler='lambda_handler.lambda_handler',
-            code=_lambda.Code.from_asset(f'{os.path.dirname(__file__)}/datalake_blog_failure_status_update'),
+            code=_lambda.Code.from_asset(f'{os.path.dirname(__file__)}/etl_job_auditor'),
             environment={
                 'DYNAMODB_TABLE_NAME': job_audit_table.table_name,
             },
@@ -179,7 +179,7 @@ class StepFunctionsStack(cdk.Stack):
             }),
             comment='Stage to Raw data load',
         )
-        glue_raw_task.add_catch(failure_notification_task, result_path='$.taskresult')
+        glue_raw_task.add_catch(failure_function_task, result_path='$.taskresult')
 
         glue_conformed_task = stepfunctions_tasks.GlueStartJobRun(
             self,
@@ -197,23 +197,23 @@ class StepFunctionsStack(cdk.Stack):
             }),
             comment='Raw to Conformed data load',
         )
-        glue_conformed_task.add_catch(failure_notification_task, result_path='$.taskresult')
+        glue_conformed_task.add_catch(failure_function_task, result_path='$.taskresult')
 
         machine_definition = glue_raw_task.next(
-            glue_conformed_task.next(success_task)
+            glue_conformed_task.next(success_function_task)
         )
 
         machine = stepfunctions.StateMachine(
             self,
             f'{target_environment}{logical_id_prefix}EtlStateMachine',
-            state_machine_name=f'{target_environment.lower()}-{resource_name_prefix}-state_machine',
+            state_machine_name=f'{target_environment.lower()}-{resource_name_prefix}-state-machine',
             definition=machine_definition,
         )
 
         trigger_function = _lambda.Function(
             self,
             f'{target_environment}{logical_id_prefix}EtlTrigger',
-            function_name=f'{target_environment.lower()}-{resource_name_prefix}-state_machine-trigger',
+            function_name=f'{target_environment.lower()}-{resource_name_prefix}-state-machine-trigger',
             runtime=_lambda.Runtime.PYTHON_3_8,
             handler='lambda_handler.lambda_handler',
             code=_lambda.Code.from_asset(f'{os.path.dirname(__file__)}/state_machine_trigger'),
