@@ -344,6 +344,12 @@ Refer to [cdk_instructions.md](./resources/cdk_instructions.md) for detailed ins
 
 ---
 
+## Developers
+
+Refer to [developer_instructions.md](./resources/developer_instructions.md) for notes to Developers on this project
+
+---
+
 ## Contributors
 
 1. **Ravi Itha**, Senior Data Architect, Amazon Web Services

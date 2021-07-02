@@ -1,0 +1,8 @@
+[flake8]
+max-line-length = 120
+
+ignore = E722, W503
+
+per-file-ignores =
+    lib/glue_scripts/datalake_purposebuilt_load.py: F401, F403, F405
+    lib/glue_scripts/datalake_conformed_load.py: F401, F403, F405

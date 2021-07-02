@@ -1,4 +1,4 @@
-# Copyright 2020 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# Copyright 2021 Amazon.com, Inc. or its affiliates. All Rights Reserved.
 # SPDX-License-Identifier: MIT-0
 
 from aws_cdk import core
@@ -13,29 +13,46 @@ from .configuration import (
 
 
 class PipelineDeployStage(core.Stage):
-    def __init__(self, scope: core.Construct, id: str, target_environment: str, **kwargs):
-        super().__init__(scope, id, **kwargs)
+    def __init__(self, scope: core.Construct, construct_id: str, target_environment: str, **kwargs):
+        """
+        Adds deploy stage to CodePipeline
+
+        @param scope cdk.Construct: Parent of this stack, usually an App or a Stage, but could be any construct.
+        @param construct_id str:
+            The construct ID of this stack. If stackName is not explicitly defined,
+            this id (and any parent IDs) will be used to determine the physical ID of the stack.
+        @param target_environment str: The target environment for stacks in the deploy stage
+        @param kwargs:
+        """
+        super().__init__(scope, construct_id, **kwargs)
 
         logical_id_prefix = get_logical_id_prefix()
 
-        self.dynamodb_stack = DynamoDbStack(self, f'{target_environment}{logical_id_prefix}EtlDynamoDb',
+        dynamodb_stack = DynamoDbStack(
+            self,
+            f'{target_environment}{logical_id_prefix}EtlDynamoDb',
             target_environment=target_environment,
             **kwargs,
         )
 
-        self.glue_stack = GlueStack(self, f'{target_environment}{logical_id_prefix}EtlGlue',
+        glue_stack = GlueStack(
+            self,
+            f'{target_environment}{logical_id_prefix}EtlGlue',
             target_environment=target_environment,
-            transformation_rules_table=self.dynamodb_stack.transformation_rules_table,
+            transformation_rules_table=dynamodb_stack.transformation_rules_table,
             **kwargs,
         )
 
-        self.step_function_stack = StepFunctionsStack(self, f'{target_environment}{logical_id_prefix}EtlStepFunctions',
+        step_function_stack = StepFunctionsStack(
+            self,
+            f'{target_environment}{logical_id_prefix}EtlStepFunctions',
             target_environment=target_environment,
-            raw_to_conformed_job=self.glue_stack.raw_to_conformed_job,
-            conformed_to_purpose_built_job=self.glue_stack.conformed_to_purpose_built_job,
+            raw_to_conformed_job=glue_stack.raw_to_conformed_job,
+            conformed_to_purpose_built_job=glue_stack.conformed_to_purpose_built_job,
+            job_audit_table=dynamodb_stack.job_audit_table,
             **kwargs,
         )
 
-        tag(self.step_function_stack, target_environment)
-        tag(self.dynamodb_stack, target_environment)
-        tag(self.glue_stack, target_environment)
+        tag(step_function_stack, target_environment)
+        tag(dynamodb_stack, target_environment)
+        tag(glue_stack, target_environment)
