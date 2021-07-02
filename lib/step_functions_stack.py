@@ -15,9 +15,9 @@ import aws_cdk.aws_stepfunctions as stepfunctions
 import aws_cdk.aws_stepfunctions_tasks as stepfunctions_tasks
 
 from .configuration import (
-    AVAILABILITY_ZONES, ROUTE_TABLES, S3_RAW_BUCKET, SUBNET_IDS,
-    SHARED_SECURITY_GROUP_ID, VPC_ID, get_environment_configuration,
-    get_logical_id_prefix, get_resource_name_prefix
+    AVAILABILITY_ZONE_1, AVAILABILITY_ZONE_2, AVAILABILITY_ZONE_3, ROUTE_TABLE_1, ROUTE_TABLE_2, ROUTE_TABLE_3,
+    S3_RAW_BUCKET, SUBNET_ID_1, SUBNET_ID_2, SUBNET_ID_3, SHARED_SECURITY_GROUP_ID, VPC_ID,
+    get_environment_configuration, get_logical_id_prefix, get_resource_name_prefix
 )
 
 
@@ -49,18 +49,24 @@ class StepFunctionsStack(cdk.Stack):
 
         vpc_id = cdk.Fn.importValue(self.mappings[VPC_ID])
         shared_security_group_output = cdk.Fn.importValue(self.mappings[SHARED_SECURITY_GROUP_ID])
-        availability_zones_output = cdk.Fn.importValue(self.mappings[AVAILABILITY_ZONES])
-        subnet_ids_output = cdk.Fn.importValue(self.mappings[SUBNET_IDS])
-        route_tables_output = cdk.Fn.importValue(self.mappings[ROUTE_TABLES])
+        availability_zones_output_1 = cdk.Fn.importValue(self.mappings[AVAILABILITY_ZONE_1])
+        availability_zones_output_2 = cdk.Fn.importValue(self.mappings[AVAILABILITY_ZONE_2])
+        availability_zones_output_3 = cdk.Fn.importValue(self.mappings[AVAILABILITY_ZONE_3])
+        subnet_ids_output_1 = cdk.Fn.importValue(self.mappings[SUBNET_ID_1])
+        subnet_ids_output_2 = cdk.Fn.importValue(self.mappings[SUBNET_ID_2])
+        subnet_ids_output_3 = cdk.Fn.importValue(self.mappings[SUBNET_ID_3])
+        route_tables_output_1 = cdk.Fn.importValue(self.mappings[ROUTE_TABLE_1])
+        route_tables_output_2 = cdk.Fn.importValue(self.mappings[ROUTE_TABLE_2])
+        route_tables_output_3 = cdk.Fn.importValue(self.mappings[ROUTE_TABLE_3])
         # Manually construct the VPC because it lives in the target account,
         # not the Deployment Util account where the synth is ran
         vpc = ec2.Vpc.from_vpc_attributes(
             self,
             'ImportedVpc',
             vpc_id=vpc_id,
-            availability_zones=availability_zones_output,
-            private_subnet_ids=subnet_ids_output,
-            private_subnet_route_table_ids=route_tables_output,
+            availability_zones=[availability_zones_output_1, availability_zones_output_2, availability_zones_output_3],
+            private_subnet_ids=[subnet_ids_output_1, subnet_ids_output_2, subnet_ids_output_3],
+            private_subnet_route_table_ids=[route_tables_output_1, route_tables_output_2, route_tables_output_3],
         )
         shared_security_group = ec2.SecurityGroup.from_security_group_id(
             self,
@@ -206,14 +212,14 @@ class StepFunctionsStack(cdk.Stack):
         machine = stepfunctions.StateMachine(
             self,
             f'{target_environment}{logical_id_prefix}EtlStateMachine',
-            state_machine_name=f'{target_environment.lower()}-{resource_name_prefix}-state-machine',
+            state_machine_name=f'{target_environment.lower()}-{resource_name_prefix}-etl-state-machine',
             definition=machine_definition,
         )
 
         trigger_function = _lambda.Function(
             self,
             f'{target_environment}{logical_id_prefix}EtlTrigger',
-            function_name=f'{target_environment.lower()}-{resource_name_prefix}-state-machine-trigger',
+            function_name=f'{target_environment.lower()}-{resource_name_prefix}-etl-state-machine-trigger',
             runtime=_lambda.Runtime.PYTHON_3_8,
             handler='lambda_handler.lambda_handler',
             code=_lambda.Code.from_asset(f'{os.path.dirname(__file__)}/state_machine_trigger'),

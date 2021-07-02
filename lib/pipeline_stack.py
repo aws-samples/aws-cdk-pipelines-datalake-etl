@@ -8,7 +8,7 @@ import aws_cdk.aws_codepipeline_actions as codepipeline_actions
 import aws_cdk.aws_iam as iam
 
 from .configuration import (
-    CROSS_ACCOUNT_DYNAMO_ROLE, DEPLOYMENT, GITHUB_REPOSITORY_NAME, GITHUB_REPOSITORY_OWNER_NAME, GITHUB_TOKEN,
+    CROSS_ACCOUNT_DYNAMODB_ROLE, DEPLOYMENT, GITHUB_REPOSITORY_NAME, GITHUB_REPOSITORY_OWNER_NAME, GITHUB_TOKEN,
     get_logical_id_prefix, get_all_configurations, get_resource_name_prefix,
 )
 from .pipeline_deploy_stage import PipelineDeployStage
@@ -134,7 +134,7 @@ class PipelineStack(cdk.Stack):
         )
         app_stage = pipeline.add_application_stage(deploy_stage)
 
-        cross_account_role = cdk.Fn.importValue(mappings[target_environment][CROSS_ACCOUNT_DYNAMO_ROLE])
+        cross_account_role_output_name = mappings[target_environment][CROSS_ACCOUNT_DYNAMODB_ROLE]
         # Dynamically manage extract list
         app_stage.add_actions(
             pipelines.ShellScriptAction(
@@ -144,7 +144,7 @@ class PipelineStack(cdk.Stack):
                 commands=[
                     'pip3 install boto3',
                     'python3 ./lib/etl_job_config/etl_job_config_manager.py '
-                    f'{target_environment} {cross_account_role}',
+                    f'{target_environment} {cross_account_role_output_name}',
                 ],
                 role_policy_statements=[
                     iam.PolicyStatement(
@@ -154,7 +154,17 @@ class PipelineStack(cdk.Stack):
                             'sts:AssumeRole',
                         ],
                         resources=[
-                            cross_account_role,
+                            '*',
+                        ],
+                    ),
+                    iam.PolicyStatement(
+                        sid='ListExportsPolicy',
+                        effect=iam.Effect.ALLOW,
+                        actions=[
+                            'cloudformation:ListExports',
+                        ],
+                        resources=[
+                            '*',
                         ],
                     )
                 ]
