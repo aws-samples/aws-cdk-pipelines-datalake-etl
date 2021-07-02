@@ -20,9 +20,8 @@ class DynamoDbStack(cdk.Stack):
         CloudFormation stack to create DynamoDB Tables.
 
         @param scope cdk.Construct: Parent of this stack, usually an App or a Stage, but could be any construct.
-        @param construct_id str:
-            The construct ID of this stack. If stackName is not explicitly defined,
-            this id (and any parent IDs) will be used to determine the physical ID of the stack.
+        @param construct_id str: The construct ID of this stack. If stackName is not explicitly defined,
+        this id (and any parent IDs) will be used to determine the physical ID of the stack.
         @param target_environment str: The target environment for stacks in the deploy stage
         @param kwargs:
         """
@@ -49,6 +48,15 @@ class DynamoDbStack(cdk.Stack):
         )
 
     def create_table(self, construct_name, table_name, partition_key, sort_key=None) -> dynamodb.Table:
+        """
+        Creates a DynamoDB table
+
+        :param construct_name: 
+        :param table_name: 
+        :param partition_key: 
+        :param sort_key: 
+        :return: 
+        """
         return dynamodb.Table(
             self,
             construct_name,

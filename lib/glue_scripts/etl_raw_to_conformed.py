@@ -60,9 +60,10 @@ def table_exists(target_database, table_name):
 def create_database():
     """
     Function to create catalog database if does not exists
+    :return: 
     """
     response = None
-
+    
     glue_client = boto3.client('glue')
     database_name = args['target_databasename']
 
