@@ -1,49 +1,123 @@
 {
-  "Comment": "State machine to run Glue ETL jobs",
+  "Comment": "Glue job processing for data lake",
   "StartAt": "GlueRawJobRun",
   "States": {
     "GlueRawJobRun": {
       "Type": "Task",
       "Resource": "arn:aws:states:::glue:startJobRun.sync",
       "Parameters": {
-        "JobName": "datalake_nyc_raw_load"
+        "JobName": "datalake_nyc_raw_load",
+        "Arguments": {
+          "--source_key.$": "$.source_key",
+          "--source_system_name.$": "$.source_system_name",
+          "--table_name.$": "$.table_name",
+          "--source_bucketname.$": "$.source_bucketname",
+          "--base_file_name.$": "$.base_file_name",
+          "--p_year.$": "$.p_year",
+          "--p_month.$": "$.p_month",
+          "--p_day.$": "$.p_day"
+        }
       },
       "Comment": "Stage to Raw data load",
-      "Catch":[
+      "Catch": [
         {
-          "ErrorEquals":[
-            "States.All"
+          "ErrorEquals": [
+            "States.ALL"
           ],
-          "Next":"NotifySNSError",
+          "Next": "updateAuditFailureStatus",
           "ResultPath": "$.taskresult"
         }
       ],
-      "Next": "GlueConformedJobRun"
+      "Next": "GlueConformedJobRun",
+      "OutputPath": "$",
+      "ResultPath": "$.taskresult"
     },
     "GlueConformedJobRun": {
       "Type": "Task",
       "Resource": "arn:aws:states:::glue:startJobRun.sync",
       "Parameters": {
-        "JobName": "datalake_nyc_conform_load"
+        "JobName": "datalake_nyc_conform_load",
+        "Arguments": {
+          "--source_key.$": "$.source_key",
+          "--source_system_name.$": "$.source_system_name",
+          "--table_name.$": "$.table_name",
+          "--source_bucketname.$": "$.source_bucketname",
+          "--base_file_name.$": "$.base_file_name",
+          "--p_year.$": "$.p_year",
+          "--p_month.$": "$.p_month",
+          "--p_day.$": "$.p_day"
+        }
       },
       "Comment": "Stage to Raw data load",
-      "Catch":[
+      "Catch": [
         {
-          "ErrorEquals":[
-            "States.All"
+          "ErrorEquals": [
+            "States.ALL"
           ],
-          "Next":"NotifySNSError",
+          "Next": "updateAuditFailureStatus",
           "ResultPath": "$.taskresult"
         }
       ],
-      "Next": "NotifySNSSuccess"
+      "Next": "updateAuditSuccessStatus",
+      "OutputPath": "$",
+      "ResultPath": "$.taskresult"
+    },
+    "updateAuditSuccessStatus": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "OutputPath": "$",
+      "Parameters": {
+        "Payload": {
+          "Input.$": "$"
+        },
+        "FunctionName": "arn:aws:lambda:us-east-2:711451427668:function:datalake_blog_status_update:$LATEST"
+      },
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException"
+          ],
+          "IntervalSeconds": 2,
+          "MaxAttempts": 6,
+          "BackoffRate": 2
+        }
+      ],
+      "Next": "NotifySNSSuccess",
+      "ResultPath": "$.taskresult"
+    },
+    "updateAuditFailureStatus": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "OutputPath": "$",
+      "Parameters": {
+        "Payload": {
+          "Input.$": "$"
+        },
+        "FunctionName": "arn:aws:lambda:us-east-2:711451427668:function:datalake_blog_failure_status_update:$LATEST"
+      },
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException"
+          ],
+          "IntervalSeconds": 2,
+          "MaxAttempts": 6,
+          "BackoffRate": 2
+        }
+      ],
+      "Next": "NotifySNSError",
+      "ResultPath": "$.taskresult"
     },
     "NotifySNSError": {
       "Type": "Task",
       "Resource": "arn:aws:states:::sns:publish",
       "Parameters": {
         "Message.$": "$",
-        "TopicArn": "arn:aws:sns:us-east-2:1234567890:dynamodb",
+        "TopicArn": "arn:aws:sns:us-east-2:711451427668:dynamodb",
         "Subject": "Blog job Failed"
       },
       "Next": "FailState"
@@ -53,7 +127,7 @@
       "Resource": "arn:aws:states:::sns:publish",
       "Parameters": {
         "Message.$": "$",
-        "TopicArn": "arn:aws:sns:us-east-2:1234567890:dynamodb",
+        "TopicArn": "arn:aws:sns:us-east-2:711451427668:dynamodb",
         "Subject": "Blog job Completed"
       },
       "Next": "Success"
