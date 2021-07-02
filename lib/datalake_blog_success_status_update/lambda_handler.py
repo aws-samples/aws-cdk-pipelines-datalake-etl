@@ -40,8 +40,8 @@ def lambda_handler(event, context):
     p_stp_fn_time = now.strftime('%Y%m%d%H%M%S%f')
     # update table
     try:
-        client = boto3.resource('dynamodb')
-        table = client.Table(os.environ['dynamo_tablename'])
+        dynamo_client = boto3.resource('dynamodb')
+        table = client.Table(os.environ['DYNAMODB_TABLE_NAME'])
         table.update_item(
             Key={
                 'execution_id': execution_id

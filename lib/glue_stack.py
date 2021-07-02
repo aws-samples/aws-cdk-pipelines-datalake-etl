@@ -103,7 +103,7 @@ class GlueStack(cdk.Stack):
 
         job_connection = glue.Connection(
             self,
-            'DataLakeRawToConformedWorkflowConnection',
+            f'{target_environment}{logical_id_prefix}RawToConformedWorkflowConnection',
             type=glue.ConnectionType.NETWORK,
             connection_name=f'{target_environment.lower()}-{resource_name_prefix}-raw-to-conformed-connection',
             security_groups=[shared_security_group],

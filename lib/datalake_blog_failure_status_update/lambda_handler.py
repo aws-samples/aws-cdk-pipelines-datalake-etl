@@ -46,8 +46,8 @@ def lambda_handler(event, context):
     # update table
 
     try:
-        client = boto3.resource('dynamodb')
-        table = client.Table(os.environ['dynamo_tablename'])
+        dynamo_client = boto3.resource('dynamodb')
+        table = client.Table(os.environ['DYNAMODB_TABLE_NAME'])
         table.update_item(
             Key={
                 'execution_id': execution_id

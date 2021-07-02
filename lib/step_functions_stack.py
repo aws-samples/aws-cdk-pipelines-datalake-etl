@@ -72,6 +72,53 @@ class StepFunctionsStack(cdk.Stack):
 
         notification_topic = sns.Topic(self, f'{target_environment}{logical_id_prefix}EtlFailedTopic')
 
+        failure_function = _lambda.Function(
+            self,
+            f'{target_environment}{logical_id_prefix}EtlFailureStatusUpdate',
+            function_name=f'{target_environment.lower()}-{resource_name_prefix}-etl-failure-status-update',
+            runtime=_lambda.Runtime.PYTHON_3_8,
+            handler='lambda_handler.lambda_handler',
+            code=_lambda.Code.from_asset(f'{os.path.dirname(__file__)}/datalake_blog_failure_status_update'),
+            environment={
+                'DYNAMODB_TABLE_NAME': job_audit_table.table_name,
+            },
+            security_groups=[shared_security_group],
+            vpc=vpc,
+            vpc_subnets=ec2.SubnetSelection(subnet_type=ec2.SubnetType.PRIVATE),
+        )
+        failure_function.add_to_role_policy(
+            iam.PolicyStatement(
+                effect=iam.Effect.ALLOW,
+                actions=[
+                    'dynamodb:UpdateItem',
+                ],
+                resources=[job_audit_table.table_arn],
+            )
+        )
+        success_function = _lambda.Function(
+            self,
+            f'{target_environment}{logical_id_prefix}EtlSuccessStatusUpdate',
+            function_name=f'{target_environment.lower()}-{resource_name_prefix}-etl-success-status-update',
+            runtime=_lambda.Runtime.PYTHON_3_8,
+            handler='lambda_handler.lambda_handler',
+            code=_lambda.Code.from_asset(f'{os.path.dirname(__file__)}/datalake_blog_success_status_update'),
+            environment={
+                'DYNAMODB_TABLE_NAME': job_audit_table.table_name,
+            },
+            security_groups=[shared_security_group],
+            vpc=vpc,
+            vpc_subnets=ec2.SubnetSelection(subnet_type=ec2.SubnetType.PRIVATE),
+        )
+        success_function.add_to_role_policy(
+            iam.PolicyStatement(
+                effect=iam.Effect.ALLOW,
+                actions=[
+                    'dynamodb:UpdateItem',
+                ],
+                resources=[job_audit_table.table_arn],
+            )
+        )
+
         fail_state = stepfunctions.Fail(
             self,
             f'{target_environment}{logical_id_prefix}EtlFailedState',
@@ -80,42 +127,77 @@ class StepFunctionsStack(cdk.Stack):
         )
         success_state = stepfunctions.Succeed(self, f'{target_environment}{logical_id_prefix}EtlSucceededState')
 
-        error_task = stepfunctions_tasks.SnsPublish(
+        failure_function_task = stepfunctions_tasks.LambdaInvoke(
             self,
-            f'{target_environment}{logical_id_prefix}EtlErrorPublishTask',
+            f'{target_environment}{logical_id_prefix}EtlFailureStatusUpdate',
+            lambda_function=failure_function,
+            result_path='$.taskresult',
+            retry_on_service_exceptions=True,
+            output_path='$'
+        )
+        failure_notification_task = stepfunctions_tasks.SnsPublish(
+            self,
+            f'{target_environment}{logical_id_prefix}EtlFailurePublishTask',
             topic=notification_topic,
             subject='Job Completed',
             message=stepfunctions.TaskInput.from_data_at('$')
         )
-        error_task.next(fail_state)
+        failure_function_task.next(failure_notification_task)
+        failure_notification_task.next(fail_state)
 
+        success_function_task = stepfunctions_tasks.LambdaInvoke(
+            self,
+            f'{target_environment}{logical_id_prefix}EtlSuccessStatusUpdate',
+            lambda_function=success_function,
+            result_path='$.taskresult',
+            retry_on_service_exceptions=True,
+            output_path='$'
+        )
         success_task = stepfunctions_tasks.SnsPublish(
             self,
-            f'{target_environment}{logical_id_prefix}EtlErrorPublishTask',
+            f'{target_environment}{logical_id_prefix}EtlSuccessPublishTask',
             topic=notification_topic,
             subject='Job Failed',
             message=stepfunctions.TaskInput.from_data_at('$')
         )
+        success_function_task.next(success_task)
         success_task.next(success_state)
 
         glue_raw_task = stepfunctions_tasks.GlueStartJobRun(
             self,
             f'{target_environment}{logical_id_prefix}GlueRawJobTask',
             glue_job_name=raw_to_conformed_job.name,
-            arguments=stepfunctions.TaskInput.from_data_at(
-
-            ),
+            arguments=stepfunctions.TaskInput.from_object({
+                '--source_key.$': '$.source_key',
+                '--source_system_name.$': '$.source_system_name',
+                '--table_name.$': '$.table_name',
+                '--source_bucketname.$': '$.source_bucketname',
+                '--base_file_name.$': '$.base_file_name',
+                '--p_year.$': '$.p_year',
+                '--p_month.$': '$.p_month',
+                '--p_day.$': '$.p_day'
+            }),
             comment='Stage to Raw data load',
         )
-        glue_raw_task.add_catch(error_task, result_path='$.taskresult')
+        glue_raw_task.add_catch(failure_notification_task, result_path='$.taskresult')
 
         glue_conformed_task = stepfunctions_tasks.GlueStartJobRun(
             self,
             f'{target_environment}{logical_id_prefix}GlueConformedJobTask',
             glue_job_name=conformed_to_purpose_built_job.name,
+            arguments=stepfunctions.TaskInput.from_object({
+                '--source_key.$': '$.source_key',
+                '--source_system_name.$': '$.source_system_name',
+                '--table_name.$': '$.table_name',
+                '--source_bucketname.$': '$.source_bucketname',
+                '--base_file_name.$': '$.base_file_name',
+                '--p_year.$': '$.p_year',
+                '--p_month.$': '$.p_month',
+                '--p_day.$': '$.p_day'
+            }),
             comment='Raw to Conformed data load',
         )
-        glue_conformed_task.add_catch(error_task, result_path='$.taskresult')
+        glue_conformed_task.add_catch(failure_notification_task, result_path='$.taskresult')
 
         machine_definition = glue_raw_task.next(
             glue_conformed_task.next(success_task)
@@ -134,7 +216,7 @@ class StepFunctionsStack(cdk.Stack):
             function_name=f'{target_environment.lower()}-{resource_name_prefix}-etl-trigger',
             runtime=_lambda.Runtime.PYTHON_3_8,
             handler='lambda_handler.lambda_handler',
-            code=_lambda.Code.from_asset(f'{os.path.dirname(__file__)}/trigger_lambda_scripts'),
+            code=_lambda.Code.from_asset(f'{os.path.dirname(__file__)}/datalake_blog_trigger_load'),
             environment={
                 'DYNAMODB_TABLE_NAME': job_audit_table.table_name,
                 'SFN_STATE_MACHINE_ARN': machine.state_machine_arn,

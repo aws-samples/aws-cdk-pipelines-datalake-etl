@@ -192,7 +192,7 @@ def main():
     spark.conf.set('spark.sql.sources.partitionOverwriteMode', 'dynamic')
     spark.conf.set('hive.exec.dynamic.partition', 'true')
     spark.conf.set('hive.exec.dynamic.partition.mode', 'nonstrict')
-
+f
     dynamic_df = DynamicFrame.fromDF(df, glueContext, 'table_df')
     dynamic_df.show(5)
     mapped_dyF = Map.apply(frame=dynamic_df, f=add_partition)

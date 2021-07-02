@@ -175,7 +175,7 @@ def add_partition(rec):
 
 
 def main():
-    client = boto3.resource('dynamodb')
+    dynamo_client = boto3.resource('dynamodb')
     print('after client connection')
     table = client.Table(args['dynamodb_tablename'])
     print('table connected')

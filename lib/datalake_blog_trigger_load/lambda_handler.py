@@ -33,7 +33,7 @@ def start_etl_job_run(execution_id, p_stp_fn_time, sfn_arn, sfn_name, table_name
         item['job_latest_status'] = 'started'
         item['job_start_date'] = p_stp_fn_time
         item['joblast_updated_timestamp'] = p_stp_fn_time
-        client = boto3.resource('dynamodb')
+        dynamo_client = boto3.resource('dynamodb')
         table = client.Table(table_name)
         table.put_item(Item=item)
     except botocore.exceptions.ClientError as error:
@@ -73,7 +73,7 @@ def lambda_handler(event, context):
     # s3://<buckename>/<source_system_name>/<table_name>
     p_table_name = key.split('/')[1]
     p_file_dir = os.path.dirname(p_full_path)
-    p_file_dir_upd = p_file_dir.replace("%3D", "=")
+    p_file_dir_upd = p_file_dir.replace('%3D', '=')
     p_base_file_name = os.path.basename(p_full_path)
 
     logger.info('bucket: ' + bucket)
@@ -103,7 +103,7 @@ def lambda_handler(event, context):
         logger.info('sfn name: ' + p_base_file_name + '-' + p_stp_fn_time)
 
         sfn_name = p_base_file_name + '-' + p_stp_fn_time
-        print("before step function")
+        print('before step function')
         sfn_arn = os.environ['sfn_arn']
 
         execution_id = str(uuid.uuid4())
@@ -137,7 +137,7 @@ def lambda_handler(event, context):
             logger.info('[ERROR] Step function call failed:{}'.format(e))
             raise e
 
-        start_etl_job_run(execution_id, p_stp_fn_time, sfn_arn, sfn_name, os.environ['dynamo_tablename'], sfn_input)
+        start_etl_job_run(execution_id, p_stp_fn_time, sfn_arn, sfn_name, os.environ['DYNAMODB_TABLE_NAME'], sfn_input)
 
     return {
         'statusCode': 200,
