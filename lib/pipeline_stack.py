@@ -55,7 +55,6 @@ class PipelineStack(cdk.Stack):
         mappings = get_all_configurations()
         source_artifact = codepipeline.Artifact()
         cloud_assembly_artifact = codepipeline.Artifact()
-
         logical_id_prefix = get_logical_id_prefix()
         resource_name_prefix = get_resource_name_prefix()
 

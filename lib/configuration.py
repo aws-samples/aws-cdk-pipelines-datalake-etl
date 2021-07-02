@@ -43,16 +43,16 @@ S3_CONFORMED_BUCKET = 's3_conformed_bucket'
 S3_PURPOSE_BUILT_BUCKET = 's3_purpose_built_bucket'
 CROSS_ACCOUNT_DYNAMODB_ROLE = 'cross_account_dynamodb_role'
 
+GLUE_CONNECTION_AVAILABILITY_ZONE = 'glue_connection_availability_zone'
+GLUE_CONNECTION_SUBNET = 'glue_connection_subnet'
+
 
 def get_local_configuration(environment: str) -> dict:
     """
     Provides manually configured variables that are validated for quality and safety.
-
     @param: environment str: The environment used to retrieve corresponding configuration
-
     @raises: Exception: Throws an exception if the resource_name_prefix does not conform
     @raises: Exception: Throws an exception if the requested environment does not exist
-
     @returns: dict:
     """
     local_mapping = {
@@ -104,9 +104,7 @@ def get_local_configuration(environment: str) -> dict:
 def get_environment_configuration(environment: str) -> dict:
     """
     Provides all configuration values for the given target environment
-
     @param environment str: The environment used to retrieve corresponding configuration
-
     @return: dict:
     """
     cloudformation_output_mapping = {
@@ -137,7 +135,6 @@ def get_all_configurations() -> dict:
     """
     Returns a dict mapping of configurations for all environments.
     These keys correspond to static values, CloudFormation outputs, and Secrets Manager (passwords only) records.
-
     @return: dict:
     """
     return {
@@ -154,7 +151,6 @@ def get_all_configurations() -> dict:
 
 def get_logical_id_prefix() -> str:
     """Returns the logical id prefix to apply to all CloudFormation resources
-
     @return: str:
     """
     return get_local_configuration(DEPLOYMENT)[LOGICAL_ID_PREFIX]
@@ -162,7 +158,6 @@ def get_logical_id_prefix() -> str:
 
 def get_resource_name_prefix() -> str:
     """Returns the resource name prefix to apply to all resources names
-
     @return: str:
     """
     return get_local_configuration(DEPLOYMENT)[RESOURCE_NAME_PREFIX]

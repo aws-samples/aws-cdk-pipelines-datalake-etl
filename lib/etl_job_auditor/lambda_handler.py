@@ -13,7 +13,10 @@ import dateutil.tz
 
 # Function for logger
 def load_log_config():
-    # Basic config. Replace with your own logging config if required
+    """
+    Configure logging
+    :return: 
+    """
     root = logging.getLogger()
     root.setLevel(logging.INFO)
 

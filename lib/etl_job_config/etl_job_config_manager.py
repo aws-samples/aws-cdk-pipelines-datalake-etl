@@ -10,6 +10,10 @@ from ..dynamodb_stack import get_transformation_rules_table_name
 
 
 def main():
+    """
+    Main method
+    :return: 
+    """
     target_environment = sys.argv[1]
     role_output_name = sys.argv[2]
 
