@@ -30,7 +30,7 @@ def start_etl_job_run(execution_id, p_stp_fn_time, sfn_arn, sfn_name, table_name
         item['sfn_execution_name'] = sfn_name
         item['sfn_arn'] = sfn_arn
         item['sfn_input'] = sfn_input
-        item['job_latest_status'] = 'started'
+        item['job_latest_status'] = 'STARTED'
         item['job_start_date'] = p_stp_fn_time
         item['joblast_updated_timestamp'] = p_stp_fn_time
         dynamo_client = boto3.resource('dynamodb')
