@@ -26,12 +26,12 @@ logger = load_log_config()
 
 def lambda_handler(event, context):
     """
-    Lambda function's entry point. This function receives a success event 
-    from Step Functions State machine, transforms error message, and update 
+    Lambda function's entry point. This function receives a success event
+    from Step Functions State machine, transforms error message, and update
     DynamoDB table.
-    :param event: 
-    :param context: 
-    :return: 
+    :param event:
+    :param context:
+    :return:
     """
     print(event)
     print(event['Input']['execution_id'])
@@ -42,15 +42,13 @@ def lambda_handler(event, context):
     p_ingest_time = now.strftime('%m/%d/%Y %H:%M:%S')
     logger.info(p_ingest_time)
 
-    
     # update table
     if "JobRunState" in event['Input']['taskresult']:
-        
         print("JobRunState Exists")
         print(event['Input']['taskresult']['JobRunState'])
         print(event)
-        status=event['Input']['taskresult']['JobRunState']
-        #Time stamp for the stepfunction name
+        status = event['Input']['taskresult']['JobRunState']
+        # Time stamp for the stepfunction name
         p_stp_fn_time = now.strftime("%Y%m%d%H%M%S%f")
         # update table
         try:
@@ -66,22 +64,22 @@ def lambda_handler(event, context):
                     ':lut': p_stp_fn_time,
                 },
                 ReturnValues="UPDATED_NEW"
-                )
+            )
         except botocore.exceptions.ClientError as error:
             logger.info("[ERROR] Dynamodb process failed:{}".format(error))
             raise error
         except Exception as e:
             logger.info("[ERROR] Dynamodb process failed:{}".format(e))
-            raise e   
+            raise e
     else:
-        print("JobRunState Doesnot exists")
+        print("JobRunState Does not exist")
         print(event)
-        status="FAILED"
-        error_msg=event['Input']['taskresult']['Cause']
-        #Time stamp for the stepfunction name
+        status = "FAILED"
+        error_msg = event['Input']['taskresult']['Cause']
+        # Time stamp for the stepfunction name
         p_stp_fn_time = now.strftime("%Y%m%d%H%M%S%f")
         # update table
-        
+
         try:
             dynamo_client = boto3.resource('dynamodb')
             table = dynamo_client.Table(os.environ['DYNAMODB_TABLE_NAME'])
@@ -93,18 +91,16 @@ def lambda_handler(event, context):
                 ExpressionAttributeValues={
                     ':sts': status,
                     ':lut': p_stp_fn_time,
-                    ':emsg':error_msg
+                    ':emsg': error_msg
                 },
                 ReturnValues="UPDATED_NEW"
-                )
+            )
         except botocore.exceptions.ClientError as error:
             logger.info("[ERROR] Dynamodb process failed:{}".format(error))
             raise error
         except Exception as e:
             logger.info("[ERROR] Dynamodb process failed:{}".format(e))
-            raise e 
-    
-    
+            raise e
 
     return {
         'statusCode': 200,

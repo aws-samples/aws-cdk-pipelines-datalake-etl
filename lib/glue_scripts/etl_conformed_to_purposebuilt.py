@@ -177,7 +177,7 @@ def add_partition(rec):
 def main():
     dynamo_client = boto3.resource('dynamodb')
     print('after client connection')
-    table = client.Table(args['dynamodb_tablename'])
+    table = dynamo_client.Table(args['dynamodb_tablename'])
     print('table connected')
     response = table.query(KeyConditionExpression=Key('load_name').eq(args['table_name']))
 
