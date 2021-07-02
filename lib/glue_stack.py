@@ -117,7 +117,7 @@ class GlueStack(cdk.Stack):
             command=glue.CfnJob.JobCommandProperty(
                 name='glueetl',
                 python_version='3',
-                script_location=f's3://{glue_scripts_bucket.bucket_name}/etl/datalake_conformed_load.py'
+                script_location=f's3://{glue_scripts_bucket.bucket_name}/etl/etl_raw_to_conformed.py'
             ),
             connections=glue.CfnJob.glue.ConnectionsListProperty(
                 connections=[job_connection.connection_name],
@@ -147,7 +147,7 @@ class GlueStack(cdk.Stack):
             command=glue.CfnJob.JobCommandProperty(
                 name='glueetl',
                 python_version='3',
-                script_location=f's3://{glue_scripts_bucket.bucket_name}/etl/datalake_conformed_load.py'
+                script_location=f's3://{glue_scripts_bucket.bucket_name}/etl/etl_conformed_to_purposebuilt.py'
             ),
             connections=glue.CfnJob.glue.ConnectionsListProperty(
                 connections=[job_connection.connection_name],

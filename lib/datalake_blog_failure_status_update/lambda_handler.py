@@ -25,7 +25,14 @@ logger = load_log_config()
 
 
 def lambda_handler(event, context):
-    # TODO implement
+    """
+    Lambda function's entry point. This function receives an failed event 
+    from Step Functions State machine, transforms error message, and update 
+    DynamoDB table.
+    :param event: 
+    :param context: 
+    :return: 
+    """
     print(event)
     print(event['Input'])
 
@@ -41,13 +48,13 @@ def lambda_handler(event, context):
 
     status = 'FAILED'
     error_msg = event['Input']['taskresult']['Cause']
-    # Time stamp for the stepfunction name
+    # Time stamp for the step function name
     p_stp_fn_time = now.strftime('%Y%m%d%H%M%S%f')
     # update table
 
     try:
         dynamo_client = boto3.resource('dynamodb')
-        table = client.Table(os.environ['DYNAMODB_TABLE_NAME'])
+        table = dynamo_client.Table(os.environ['DYNAMODB_TABLE_NAME'])
         table.update_item(
             Key={
                 'execution_id': execution_id

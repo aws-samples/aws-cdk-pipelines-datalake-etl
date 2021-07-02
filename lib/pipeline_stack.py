@@ -143,7 +143,7 @@ class PipelineStack(cdk.Stack):
                 run_order=app_stage.next_sequential_run_order(),
                 commands=[
                     'pip3 install boto3',
-                    'python3 ./lib/dynamodb_config/datalake_blog_conformed_sync.py '
+                    'python3 ./lib/etl_job_config/etl_job_config_manager.py '
                     f'{target_environment} {cross_account_role}',
                 ],
                 role_policy_statements=[

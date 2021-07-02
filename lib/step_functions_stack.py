@@ -29,7 +29,7 @@ class StepFunctionsStack(cdk.Stack):
         **kwargs
     ) -> None:
         """
-        CloudFormation stack to create Step Functions, Lambdas, and SNS notification Topics
+        CloudFormation stack to create Step Functions, Lambdas, and SNS Topics
 
         @param scope cdk.Construct: Parent of this stack, usually an App or a Stage, but could be any construct.
         @param construct_id str:
@@ -101,7 +101,7 @@ class StepFunctionsStack(cdk.Stack):
             function_name=f'{target_environment.lower()}-{resource_name_prefix}-etl-success-status-update',
             runtime=_lambda.Runtime.PYTHON_3_8,
             handler='lambda_handler.lambda_handler',
-            code=_lambda.Code.from_asset(f'{os.path.dirname(__file__)}/datalake_blog_success_status_update'),
+            code=_lambda.Code.from_asset(f'{os.path.dirname(__file__)}/etl_job_auditor'),
             environment={
                 'DYNAMODB_TABLE_NAME': job_audit_table.table_name,
             },
@@ -206,17 +206,17 @@ class StepFunctionsStack(cdk.Stack):
         machine = stepfunctions.StateMachine(
             self,
             f'{target_environment}{logical_id_prefix}EtlStateMachine',
-            state_machine_name=f'{target_environment.lower()}-{resource_name_prefix}-etl',
+            state_machine_name=f'{target_environment.lower()}-{resource_name_prefix}-state_machine',
             definition=machine_definition,
         )
 
         trigger_function = _lambda.Function(
             self,
             f'{target_environment}{logical_id_prefix}EtlTrigger',
-            function_name=f'{target_environment.lower()}-{resource_name_prefix}-etl-trigger',
+            function_name=f'{target_environment.lower()}-{resource_name_prefix}-state_machine-trigger',
             runtime=_lambda.Runtime.PYTHON_3_8,
             handler='lambda_handler.lambda_handler',
-            code=_lambda.Code.from_asset(f'{os.path.dirname(__file__)}/datalake_blog_trigger_load'),
+            code=_lambda.Code.from_asset(f'{os.path.dirname(__file__)}/state_machine_trigger'),
             environment={
                 'DYNAMODB_TABLE_NAME': job_audit_table.table_name,
                 'SFN_STATE_MACHINE_ARN': machine.state_machine_arn,

@@ -145,8 +145,7 @@ We provided the following scripts to complete pre-deployment steps:
   | --|-----------| -------------|
   | 1 | [bootstrap_deployment_account.sh](./lib/prerequisites/bootstrap_deployment_account.sh) | ***To be added by Isaiah Grant*** |
   | 2 | [bootstrap_target_account.sh](./lib/prerequisites/bootstrap_target_account.sh) | ***To be added by Isaiah Grant*** |
-  | 3 | [configure_account_parameters.py](./lib/prerequisites/configure_account_parameters.py) | ***To be added by Isaiah Grant*** |
-  | 4 | [configure_account_secrets.py](./lib/prerequisites/configure_account_secrets.py) | ***To be added by Isaiah Grant*** | 
+  | 3 | [configure_account_secrets.py](./lib/prerequisites/configure_account_secrets.py) | ***To be added by Isaiah Grant*** | 
 
 Before you proceed further, make sure you configured your AWS CLI. If not, refer to [Configuring the AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-configure.html) for more details.
 
@@ -189,43 +188,6 @@ Environment bootstrap is standard CDK process to prepare an AWS environment read
     ```
 
  1. Expected output: ***To be added by Isaiah Grant***
-
----
-
-### Application Configuration
-
-Before we deploy our resources we must provide the manual variables and upon deployment the CDK Pipelines will programmatically provide variables for managed resources. We use [AWS Systems Manager Parameter Store](https://docs.aws.amazon.com/systems-manager/latest/userguide/systems-manager-parameter-store.html) for this and they are are stored in the central deployment account. Follow the below steps:
-
-1. **Note:** It is safe to commit these values to your repository
-
-1. Go  to, [configure_account_parameters.py](./lib/prerequisites/configure_account_parameters.py) and fill in values of the `all_parameters` dict as desired
-
-1. run the below command to configure parameters for **dev** account
-
-   ```{bash}
-   # First configure AWS for the Deployment Account
-   python3 ./lib/prerequisites/configure_account_parameters.py Dev
-   ```
-
-1. Expected output: ***To be added by Isaiah Grant***
-
-1. run the below command to configure parameters for **test** account
-
-   ```{bash}
-   # First configure AWS for the Deployment Account
-   ./lib/prerequisites/configure_account_parameters.sh Test
-   ```
-
-1. Expected output: ***To be added by Isaiah Grant***
-
-1. run the below command to configure parameters for **prod** account
-
-   ```{bash}
-   # First configure AWS for the Deployment Account
-   ./lib/prerequisites/ configure_account_parameters.sh Prod
-   ```
-
-1. Expected output: ***To be added by Isaiah Grant***
 
 ---
 
