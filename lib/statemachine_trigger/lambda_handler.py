@@ -34,7 +34,7 @@ def start_etl_job_run(execution_id, p_stp_fn_time, sfn_arn, sfn_name, table_name
         item['job_start_date'] = p_stp_fn_time
         item['joblast_updated_timestamp'] = p_stp_fn_time
         dynamo_client = boto3.resource('dynamodb')
-        table = client.Table(table_name)
+        table = dynamo_client.Table(table_name)
         table.put_item(Item=item)
     except botocore.exceptions.ClientError as error:
         logger.info('[ERROR] Dynamodb process failed:{}'.format(error))
