@@ -8,7 +8,6 @@ import aws_cdk.aws_ec2 as ec2
 import aws_cdk.aws_glue as glue
 import aws_cdk.aws_iam as iam
 import aws_cdk.aws_lambda as _lambda
-import aws_cdk.aws_lambda_event_sources as lambda_event_sources
 import aws_cdk.aws_s3 as s3
 import aws_cdk.aws_s3_notifications as s3_notifications
 import aws_cdk.aws_sns as sns
