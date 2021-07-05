@@ -10,6 +10,7 @@ import aws_cdk.aws_iam as iam
 import aws_cdk.aws_lambda as _lambda
 import aws_cdk.aws_lambda_event_sources as lambda_event_sources
 import aws_cdk.aws_s3 as s3
+import aws_cdk.aws_s3_notifications as s3_notifications
 import aws_cdk.aws_sns as sns
 import aws_cdk.aws_stepfunctions as stepfunctions
 import aws_cdk.aws_stepfunctions_tasks as stepfunctions_tasks
@@ -263,9 +264,14 @@ class StepFunctionsStack(cdk.Stack):
                 resources=[machine.state_machine_arn],
             )
         )
-        trigger_function.add_event_source(lambda_event_sources.S3EventSource(
-            bucket=raw_bucket,
-            events=[
-                s3.EventType.OBJECT_CREATED,
-            ]
-        ))
+        # NOTE: Preferred method is not compatible. See: https://github.com/aws/aws-cdk/issues/4323
+        # trigger_function.add_event_source(lambda_event_sources.S3EventSource(
+        #     bucket=raw_bucket,
+        #     events=[
+        #         s3.EventType.OBJECT_CREATED,
+        #     ]
+        # ))
+        raw_bucket.add_event_notification(
+            s3.EventType.OBJECT_CREATED,
+            s3_notifications.LambdaDestination(trigger_function),
+        )
