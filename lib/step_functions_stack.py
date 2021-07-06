@@ -74,11 +74,7 @@ class StepFunctionsStack(cdk.Stack):
             shared_security_group_output
         )
         raw_bucket_name = cdk.Fn.import_value(self.mappings[S3_RAW_BUCKET])
-        print("raw_bucket_name:", raw_bucket_name)
         raw_bucket = s3.Bucket.from_bucket_name(self, id='ImportedRawBucket', bucket_name=raw_bucket_name)
-        print("raw_bucket:", raw_bucket)
-        print("type:",type(raw_bucket))
-
         notification_topic = sns.Topic(self, f'{target_environment}{logical_id_prefix}EtlFailedTopic')
 
         failure_function = _lambda.Function(

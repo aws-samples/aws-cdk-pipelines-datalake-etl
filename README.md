@@ -154,7 +154,29 @@ Configure your AWS profile to target the central Deployment account as an Admini
 1. Open command line (terminal)
 1. Go to project root directory where ```cdk.json``` and ```app.py``` exist
 1. Run the command ```cdk ls```
-1. Expected output: It lists the name of the CDK Pipeline on the console
+1. Expected output. You will see the following CloudFormation stack names listed on your terminal
+
+   ```bash
+   DevDataLakeCDKBlogEtlPipeline
+   ProdDataLakeCDKBlogEtlPipeline
+   TestDataLakeCDKBlogEtlPipeline
+   DevDataLakeCDKBlogEtlPipeline/Dev/DevDataLakeCDKBlogEtlDynamoDb
+   DevDataLakeCDKBlogEtlPipeline/Dev/DevDataLakeCDKBlogEtlGlue
+   DevDataLakeCDKBlogEtlPipeline/Dev/DevDataLakeCDKBlogEtlStepFunctions
+   ProdDataLakeCDKBlogEtlPipeline/Prod/ProdDataLakeCDKBlogEtlDynamoDb
+   ProdDataLakeCDKBlogEtlPipeline/Prod/ProdDataLakeCDKBlogEtlGlue
+   ProdDataLakeCDKBlogEtlPipeline/Prod/ProdDataLakeCDKBlogEtlStepFunctions
+   TestDataLakeCDKBlogEtlPipeline/Test/TestDataLakeCDKBlogEtlDynamoDb
+   TestDataLakeCDKBlogEtlPipeline/Test/TestDataLakeCDKBlogEtlGlue
+   TestDataLakeCDKBlogEtlPipeline/Test/TestDataLakeCDKBlogEtlStepFunctions
+   ```
+
+1. Before you bootstrap central deployment account account, set environment variable
+
+   ```bash
+   export AWS_PROFILE=replace_it_with_deployment_account_profile_name_b4_running
+   ```
+
 1. Run the command ```cdk deploy --all```
 1. Expected output:
     1. It creates new Pipelines in CodePipeline in the Deployment account
