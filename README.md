@@ -301,9 +301,9 @@ Refer to [Developer Guide](resources/developer_guide.md) for more information on
 
 The following people are involved in the design, architecture, development, and testing of this solution:
 
-1. **Ravi Itha**, Senior Data Architect, Amazon Web Services
-1. **Muhammad Zahid Ali**, Data Architect, Amazon Web Services
 1. **Isaiah Grant**, Cloud Consultant, 2nd Watch, Inc.
+1. **Muhammad Zahid Ali**, Data Architect, Amazon Web Services
+1. **Ravi Itha**, Senior Data Architect, Amazon Web Services
 
 ---
 
