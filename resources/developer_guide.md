@@ -1,4 +1,4 @@
-# Developer Instructions
+# Developer Guide
 
 ## Set up Instructions
 
