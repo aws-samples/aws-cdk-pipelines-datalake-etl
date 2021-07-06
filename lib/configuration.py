@@ -60,7 +60,7 @@ def get_local_configuration(environment: str) -> dict:
             ACCOUNT_ID: '763833843198',
             REGION: 'us-east-2',
             GITHUB_REPOSITORY_OWNER_NAME: 'aws-samples',
-            GITHUB_REPOSITORY_NAME: 'aws-cdk-pipelines-datalake-infrastructure',
+            GITHUB_REPOSITORY_NAME: 'aws-cdk-pipelines-datalake-etl',
             # This is used in the Logical Id of CloudFormation resources.
             #   We recommend Capital case for consistency.
             # Example: DataLakeCdkBlog
