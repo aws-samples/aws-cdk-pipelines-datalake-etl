@@ -143,6 +143,7 @@ class PipelineStack(cdk.Stack):
                 commands=[
                     'pip3 install boto3',
                     'pip3 install -e .',
+                    'pip3 install -r requirements.txt',
                     'python3 ./lib/etl_job_config/etl_job_config_manager.py '
                     f'{target_environment} {cross_account_role_output_name}',
                 ],
