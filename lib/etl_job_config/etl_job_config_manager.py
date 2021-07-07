@@ -50,7 +50,6 @@ def main():
         traceback.print_exc()
         raise
 
-
     access_key = target_account['Credentials']['AccessKeyId']
     secret_key = target_account['Credentials']['SecretAccessKey']
     session_token = target_account['Credentials']['SessionToken']
@@ -63,7 +62,8 @@ def main():
             aws_secret_access_key=secret_key,
             aws_session_token=session_token,
         )
-        table = dynamodb.Table(get_transformation_rules_table_name(target_environment))
+        table = dynamodb.Table(
+            get_transformation_rules_table_name(target_environment))
     except botocore.exceptions.ClientError as error:
         print(f'Error connecting to dynamodb: {error}')
         traceback.print_exc()
@@ -73,7 +73,8 @@ def main():
         traceback.print_exc()
         raise
 
-    with open('./lib/etl_job_config/etl_job_config_conformed_stage.json') as json_file:
+    with open(
+        './lib/etl_job_config/etl_job_config_conformed_stage.json') as json_file:
         records = json.load(json_file)
 
     for record in records:

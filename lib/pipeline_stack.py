@@ -142,6 +142,7 @@ class PipelineStack(cdk.Stack):
                 run_order=app_stage.next_sequential_run_order(),
                 commands=[
                     'pip3 install boto3',
+                    'pip install - e .',
                     'python3 ./lib/etl_job_config/etl_job_config_manager.py '
                     f'{target_environment} {cross_account_role_output_name}',
                 ],
