@@ -6,7 +6,7 @@ import json
 import boto3
 import botocore
 import traceback
-from ..dynamodb_stack import get_transformation_rules_table_name
+from lib.dynamodb_stack import get_transformation_rules_table_name
 
 
 def main():
