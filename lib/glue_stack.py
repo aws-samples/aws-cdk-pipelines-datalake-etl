@@ -357,6 +357,6 @@ class GlueStack(cdk.Stack):
                 ]),
             ],
             managed_policies=[
-                iam.ManagedPolicy.from_aws_managed_policy_name('service-role/AWSGlueServiceiam.Role'),
+                iam.ManagedPolicy.from_aws_managed_policy_name('service-role/AWSGlueServiceRole'),
             ]
         )
