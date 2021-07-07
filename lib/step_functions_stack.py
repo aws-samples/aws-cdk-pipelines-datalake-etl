@@ -47,17 +47,17 @@ class StepFunctionsStack(cdk.Stack):
         logical_id_prefix = get_logical_id_prefix()
         resource_name_prefix = get_resource_name_prefix()
 
-        vpc_id = cdk.Fn.importValue(self.mappings[VPC_ID])
-        shared_security_group_output = cdk.Fn.importValue(self.mappings[SHARED_SECURITY_GROUP_ID])
-        availability_zones_output_1 = cdk.Fn.importValue(self.mappings[AVAILABILITY_ZONE_1])
-        availability_zones_output_2 = cdk.Fn.importValue(self.mappings[AVAILABILITY_ZONE_2])
-        availability_zones_output_3 = cdk.Fn.importValue(self.mappings[AVAILABILITY_ZONE_3])
-        subnet_ids_output_1 = cdk.Fn.importValue(self.mappings[SUBNET_ID_1])
-        subnet_ids_output_2 = cdk.Fn.importValue(self.mappings[SUBNET_ID_2])
-        subnet_ids_output_3 = cdk.Fn.importValue(self.mappings[SUBNET_ID_3])
-        route_tables_output_1 = cdk.Fn.importValue(self.mappings[ROUTE_TABLE_1])
-        route_tables_output_2 = cdk.Fn.importValue(self.mappings[ROUTE_TABLE_2])
-        route_tables_output_3 = cdk.Fn.importValue(self.mappings[ROUTE_TABLE_3])
+        vpc_id = cdk.Fn.import_value(self.mappings[VPC_ID])
+        shared_security_group_output = cdk.Fn.import_value(self.mappings[SHARED_SECURITY_GROUP_ID])
+        availability_zones_output_1 = cdk.Fn.import_value(self.mappings[AVAILABILITY_ZONE_1])
+        availability_zones_output_2 = cdk.Fn.import_value(self.mappings[AVAILABILITY_ZONE_2])
+        availability_zones_output_3 = cdk.Fn.import_value(self.mappings[AVAILABILITY_ZONE_3])
+        subnet_ids_output_1 = cdk.Fn.import_value(self.mappings[SUBNET_ID_1])
+        subnet_ids_output_2 = cdk.Fn.import_value(self.mappings[SUBNET_ID_2])
+        subnet_ids_output_3 = cdk.Fn.import_value(self.mappings[SUBNET_ID_3])
+        route_tables_output_1 = cdk.Fn.import_value(self.mappings[ROUTE_TABLE_1])
+        route_tables_output_2 = cdk.Fn.import_value(self.mappings[ROUTE_TABLE_2])
+        route_tables_output_3 = cdk.Fn.import_value(self.mappings[ROUTE_TABLE_3])
         # Manually construct the VPC because it lives in the target account,
         # not the Deployment Util account where the synth is ran
         vpc = ec2.Vpc.from_vpc_attributes(
@@ -73,9 +73,8 @@ class StepFunctionsStack(cdk.Stack):
             'ImportedSecurityGroup',
             shared_security_group_output
         )
-        raw_bucket_name = cdk.Fn.importValue(self.mappings[S3_RAW_BUCKET])
+        raw_bucket_name = cdk.Fn.import_value(self.mappings[S3_RAW_BUCKET])
         raw_bucket = s3.Bucket.from_bucket_name(self, id='ImportedRawBucket', bucket_name=raw_bucket_name)
-
         notification_topic = sns.Topic(self, f'{target_environment}{logical_id_prefix}EtlFailedTopic')
 
         failure_function = _lambda.Function(
@@ -135,7 +134,7 @@ class StepFunctionsStack(cdk.Stack):
 
         failure_function_task = stepfunctions_tasks.LambdaInvoke(
             self,
-            f'{target_environment}{logical_id_prefix}EtlFailureStatusUpdate',
+            f'{target_environment}{logical_id_prefix}EtlFailureStatusUpdateTask',
             lambda_function=failure_function,
             result_path='$.taskresult',
             retry_on_service_exceptions=True,
@@ -153,7 +152,7 @@ class StepFunctionsStack(cdk.Stack):
 
         success_function_task = stepfunctions_tasks.LambdaInvoke(
             self,
-            f'{target_environment}{logical_id_prefix}EtlSuccessStatusUpdate',
+            f'{target_environment}{logical_id_prefix}EtlSuccessStatusUpdateTask',
             lambda_function=success_function,
             result_path='$.taskresult',
             retry_on_service_exceptions=True,

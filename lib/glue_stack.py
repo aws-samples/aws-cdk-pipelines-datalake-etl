@@ -42,25 +42,25 @@ class GlueStack(cdk.Stack):
         logical_id_prefix = get_logical_id_prefix()
         resource_name_prefix = get_resource_name_prefix()
 
-        existing_access_logs_bucket_name = cdk.Fn.importValue(self.mappings[S3_ACCESS_LOG_BUCKET])
+        existing_access_logs_bucket_name = cdk.Fn.import_value(self.mappings[S3_ACCESS_LOG_BUCKET])
         access_logs_bucket = s3.Bucket.from_bucket_attributes(
             self,
             'ImportedBucket',
             bucket_name=existing_access_logs_bucket_name
         )
-        s3_kms_key_parameter = cdk.Fn.importValue(self.mappings[S3_KMS_KEY])
+        s3_kms_key_parameter = cdk.Fn.import_value(self.mappings[S3_KMS_KEY])
         s3_kms_key = kms.Key.from_key_arn(self, 'ImportedKmsKey', s3_kms_key_parameter)
-        shared_security_group_parameter = cdk.Fn.importValue(self.mappings[SHARED_SECURITY_GROUP_ID])
-        glue_connection_subnet = cdk.Fn.importValue(self.mappings[SUBNET_ID_1])
-        glue_connection_availability_zone = cdk.Fn.importValue(self.mappings[AVAILABILITY_ZONE_1])
+        shared_security_group_parameter = cdk.Fn.import_value(self.mappings[SHARED_SECURITY_GROUP_ID])
+        glue_connection_subnet = cdk.Fn.import_value(self.mappings[SUBNET_ID_1])
+        glue_connection_availability_zone = cdk.Fn.import_value(self.mappings[AVAILABILITY_ZONE_1])
 
-        conformed_bucket_name = cdk.Fn.importValue(self.mappings[S3_CONFORMED_BUCKET])
+        conformed_bucket_name = cdk.Fn.import_value(self.mappings[S3_CONFORMED_BUCKET])
         conformed_bucket = s3.Bucket.from_bucket_name(
             self,
             id='ImportedConformedBucket',
             bucket_name=conformed_bucket_name
         )
-        purposebuilt_bucket_name = cdk.Fn.importValue(self.mappings[S3_PURPOSE_BUILT_BUCKET])
+        purposebuilt_bucket_name = cdk.Fn.import_value(self.mappings[S3_PURPOSE_BUILT_BUCKET])
         purposebuilt_bucket = s3.Bucket.from_bucket_name(
             self,
             id='ImportedPurposeBuiltBucket',
@@ -107,7 +107,7 @@ class GlueStack(cdk.Stack):
             subnet=subnet
         )
 
-        glue.CfnJob(
+        self.raw_to_conformed_job = glue.CfnJob(
             self,
             f'{target_environment}{logical_id_prefix}RawToConformedJob',
             name=f'{target_environment.lower()}-{resource_name_prefix}-raw-to-conformed-job',
@@ -116,7 +116,7 @@ class GlueStack(cdk.Stack):
                 python_version='3',
                 script_location=f's3://{glue_scripts_bucket.bucket_name}/etl/etl_raw_to_conformed.py'
             ),
-            connections=glue.CfnJob.glue.ConnectionsListProperty(
+            connections=glue.CfnJob.ConnectionsListProperty(
                 connections=[job_connection.connection_name],
             ),
             default_arguments={
@@ -131,12 +131,12 @@ class GlueStack(cdk.Stack):
             ),
             glue_version='2.0',
             max_retries=0,
-            number_of_workers=1,
+            number_of_workers=5,
             role=glue_role.role_arn,
             worker_type='G.1X',
         )
 
-        glue.CfnJob(
+        self.conformed_to_purpose_built_job = glue.CfnJob(
             self,
             f'{target_environment}{logical_id_prefix}ConformedToPurposeBuiltJob',
             name=f'{target_environment.lower()}-{resource_name_prefix}-conformed-to-purpose-built-job',
@@ -145,7 +145,7 @@ class GlueStack(cdk.Stack):
                 python_version='3',
                 script_location=f's3://{glue_scripts_bucket.bucket_name}/etl/etl_conformed_to_purposebuilt.py'
             ),
-            connections=glue.CfnJob.glue.ConnectionsListProperty(
+            connections=glue.CfnJob.ConnectionsListProperty(
                 connections=[job_connection.connection_name],
             ),
             default_arguments={
@@ -162,7 +162,7 @@ class GlueStack(cdk.Stack):
             ),
             glue_version='2.0',
             max_retries=0,
-            number_of_workers=1,
+            number_of_workers=5,
             role=glue_role.role_arn,
             worker_type='G.1X',
         )
