@@ -135,7 +135,7 @@ class GlueStack(cdk.Stack):
             ),
             glue_version='2.0',
             max_retries=0,
-            number_of_workers=1,
+            number_of_workers=5,
             role=glue_role.role_arn,
             worker_type='G.1X',
         )
@@ -166,7 +166,7 @@ class GlueStack(cdk.Stack):
             ),
             glue_version='2.0',
             max_retries=0,
-            number_of_workers=1,
+            number_of_workers=5,
             role=glue_role.role_arn,
             worker_type='G.1X',
         )
@@ -357,6 +357,7 @@ class GlueStack(cdk.Stack):
                 ]),
             ],
             managed_policies=[
-	                iam.ManagedPolicy.from_aws_managed_policy_name('service-role/AWSGlueServiceRole'),
+                iam.ManagedPolicy.from_aws_managed_policy_name(
+                    'service-role/AWSGlueServiceRole'),
             ]
         )
