@@ -131,41 +131,4 @@ class PipelineStack(cdk.Stack):
             target_environment=target_environment,
             env=target_aws_env,
         )
-        app_stage = pipeline.add_application_stage(deploy_stage)
-
-        cross_account_role_output_name = mappings[target_environment][CROSS_ACCOUNT_DYNAMODB_ROLE]
-        # Dynamically manage extract list
-        app_stage.add_actions(
-            pipelines.ShellScriptAction(
-                action_name='UploadTransformationRules',
-                additional_artifacts=[source_artifact],
-                run_order=app_stage.next_sequential_run_order(),
-                commands=[
-                    'pip3 install boto3',
-                    'python3 ./lib/etl_job_config/etl_job_config_manager.py '
-                    f'{target_environment} {cross_account_role_output_name}',
-                ],
-                role_policy_statements=[
-                    iam.PolicyStatement(
-                        sid='AssumeRolePolicy',
-                        effect=iam.Effect.ALLOW,
-                        actions=[
-                            'sts:AssumeRole',
-                        ],
-                        resources=[
-                            '*',
-                        ],
-                    ),
-                    iam.PolicyStatement(
-                        sid='ListExportsPolicy',
-                        effect=iam.Effect.ALLOW,
-                        actions=[
-                            'cloudformation:ListExports',
-                        ],
-                        resources=[
-                            '*',
-                        ],
-                    )
-                ]
-            )
-        )
+        pipeline.add_application_stage(deploy_stage)

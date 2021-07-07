@@ -8,11 +8,6 @@ from .configuration import (
     PROD, TEST, get_logical_id_prefix, get_resource_name_prefix,
 )
 
-
-def get_transformation_rules_table_name(target_environment, resource_name_prefix: str) -> str:
-    return f'{target_environment}_{resource_name_prefix}_etl_transformation_rules'
-
-
 class DynamoDbStack(cdk.Stack):
 
     def __init__(self, scope: cdk.Construct, construct_id: str, target_environment: str, **kwargs) -> None:
@@ -38,13 +33,6 @@ class DynamoDbStack(cdk.Stack):
             f'{target_environment}{logical_id_prefix}EtlAuditTable',
             f'{target_environment.lower()}-{resource_name_prefix}-etl-job-audit',
             'execution_id',
-        )
-
-        transformation_table = get_transformation_rules_table_name(target_environment, resource_name_prefix)
-        self.transformation_rules_table = self.create_table(
-            f'{target_environment}{logical_id_prefix}EtlTransformationRulesTable',
-            transformation_table,
-            'load_name',
         )
 
     def create_table(self, construct_name, table_name, partition_key, sort_key=None) -> dynamodb.Table:

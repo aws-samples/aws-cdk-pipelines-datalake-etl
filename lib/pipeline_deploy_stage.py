@@ -38,7 +38,6 @@ class PipelineDeployStage(core.Stage):
             self,
             f'{target_environment}{logical_id_prefix}EtlGlue',
             target_environment=target_environment,
-            transformation_rules_table=dynamodb_stack.transformation_rules_table,
             **kwargs,
         )
 
