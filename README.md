@@ -129,7 +129,7 @@ Table below explains how this source ode structured:
   | [step_functions_stack](lib/step_functions_stack.py) | Stack creates an ETL State machine which invokes Glue Jobs and supporting Lambdas - state machine trigger and status notification. |
   | [dynamodb_stack](lib/dynamodb_stack.py) | Stack creates DynamoDB Tables for Job Auditing and ETL transformation rules. |
   | [Glue Scripts](lib/glue_scripts) | Glue spark job data processing logic for conform and purpose built layers |
-  | (ETL Job Auditor)[lib/etl_job_auditor/lambda_handler.py] | lambda script to update dynamodb in case of glue job success or failure |
+  | [ETL Job Auditor](lib/etl_job_auditor/lambda_handler.py) | lambda script to update dynamodb in case of glue job success or failure |
   | [ETL Trigger](lib/state_machine_trigger/lambda_handler.py) | lambda script to trigger step function and initiate dynamodb |
   | [ETL Transformation SQL](lib/glue_scripts/transformation-sql) | Transformation logic to be used for data processing from conformed to purpose-built |
   | [Resources](./resources) | This folder has architecture and process flow diagrams |
