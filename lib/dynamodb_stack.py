@@ -29,7 +29,7 @@ class DynamoDbStack(cdk.Stack):
         if (target_environment == PROD or target_environment == TEST):
             self.removal_policy = cdk.RemovalPolicy.RETAIN
 
-        dynamodb.Table(
+        self.job_audit_table = dynamodb.Table(
             self,
             f'{target_environment}{logical_id_prefix}EtlAuditTable',
             table_name=f'{target_environment.lower()}-{resource_name_prefix}-etl-job-audit',
