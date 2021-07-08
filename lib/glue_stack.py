@@ -3,7 +3,6 @@
 
 import aws_cdk.core as cdk
 import aws_cdk.aws_s3 as s3
-import aws_cdk.aws_dynamodb as dynamodb
 import aws_cdk.aws_ec2 as ec2
 import aws_cdk.aws_glue as glue
 import aws_cdk.aws_iam as iam
@@ -23,7 +22,6 @@ class GlueStack(cdk.Stack):
         scope: cdk.Construct,
         construct_id: str,
         target_environment: str,
-        transformation_rules_table: dynamodb.Table,
         **kwargs
     ) -> None:
         """
@@ -35,7 +33,6 @@ class GlueStack(cdk.Stack):
             The construct ID of this stack. If stackName is not explicitly defined,
             this id (and any parent IDs) will be used to determine the physical ID of the stack.
         @param target_environment str: The target environment for stacks in the deploy stage
-        @param transformation_rules-table: The DynamoDB Table that contains transformation rule queries
         @param kwargs:
         """
         super().__init__(scope, construct_id, **kwargs)
@@ -98,7 +95,6 @@ class GlueStack(cdk.Stack):
             logical_id_prefix,
             resource_name_prefix,
             s3_kms_key,
-            transformation_rules_table
         )
 
         job_connection = glue.Connection(
@@ -127,7 +123,6 @@ class GlueStack(cdk.Stack):
                 '--target_database_name': 'datablog_arg',
                 '--target_bucket': conformed_bucket.bucket_name,
                 '--target_table_name': 'datablog_nyc_raw',
-                '--extra-py-files': f's3://{glue_scripts_bucket.bucket_name}/etl/utils.py',
                 '--TempDir': f's3://{glue_scripts_temp_bucket.bucket_name}/etl/raw-to-conformed',
             },
             execution_property=glue.CfnJob.ExecutionPropertyProperty(
@@ -157,8 +152,8 @@ class GlueStack(cdk.Stack):
                 '--target_database_name': 'datablog_conformed_arg',
                 '--target_bucket': purposebuilt_bucket.bucket_name,
                 '--target_table_name': 'datablog_nyc_purposebuilt',
-                '--transformation_rules_table': transformation_rules_table.table_name,
-                '--extra-py-files': f's3://{glue_scripts_bucket.bucket_name}/etl/utils.py',
+                '--txn_bucket_name': glue_scripts_bucket.bucket_name,
+                '--txn_sql_prefix_path': '/etl/transformation-sql/',
                 '--TempDir': f's3://{glue_scripts_temp_bucket.bucket_name}/etl/conformed-to-purpose-built'
             },
             execution_property=glue.CfnJob.ExecutionPropertyProperty(
@@ -188,7 +183,7 @@ class GlueStack(cdk.Stack):
         @param s3_kms_key kms.Key: The KMS Key to use for encryption of data at rest
         @param access_logs_bucket s3.Bucket: The access logs target for this bucket
         """
-        bucket_name = f'{target_environment.lower()}-{resource_name_prefix}-{self.account}-raw-glue-scripts'
+        bucket_name = f'{target_environment.lower()}-{resource_name_prefix}-{self.account}-etl-scripts'
         bucket = s3.Bucket(
             self,
             f'{target_environment}{logical_id_prefix}RawGlueScriptsBucket',
@@ -230,7 +225,7 @@ class GlueStack(cdk.Stack):
         @param s3_kms_key kms.Key: The KMS Key to use for encryption of data at rest
         @param access_logs_bucket s3.Bucket: The access logs target for this bucket
         """
-        bucket_name = f'{target_environment.lower()}-{resource_name_prefix}-{self.account}-raw-glue-temporary-scripts'
+        bucket_name = f'{target_environment.lower()}-{resource_name_prefix}-{self.account}-glue-temporary-scripts'
         bucket = s3.Bucket(
             self,
             f'{target_environment}{logical_id_prefix}RawGlueScriptsTemporaryBucket',
@@ -256,7 +251,6 @@ class GlueStack(cdk.Stack):
         logical_id_prefix: str,
         resource_name_prefix: str,
         s3_kms_key: kms.Key,
-        transformation_rules_table: dynamodb.Table
     ) -> iam.Role:
         """
         Creates the role used during Glue Job execution
@@ -265,7 +259,6 @@ class GlueStack(cdk.Stack):
         @param logical_id_prefix str: The logical id prefix to apply to all CloudFormation resources
         @param resource_name_prefix str: The prefix applied to all resource names
         @param s3_kms_key kms.Key: The KMS Key to provide permissions to
-        @param transformation_rules_table dynamodb.Table: The table to provide permissions to
 
         @returns iam.Role: The role that was created
         """
@@ -275,35 +268,6 @@ class GlueStack(cdk.Stack):
             role_name=f'{target_environment.lower()}-{resource_name_prefix}-raw-glue-role',
             assumed_by=iam.ServicePrincipal('glue.amazonaws.com'),
             inline_policies=[
-                iam.PolicyDocument(statements=[
-                    iam.PolicyStatement(
-                        effect=iam.Effect.ALLOW,
-                        actions=[
-                            'dynamodb:PutItem',
-                            'dynamodb:DescribeTable',
-                            'dynamodb:GetItem',
-                            'dynamodb:Scan',
-                            'dynamodb:Query',
-                            'dynamodb:UpdateItem',
-                            'dynamodb:DescribeTimeToLive',
-                            'dynamodb:GetRecords',
-                        ],
-                        resources=[
-                            transformation_rules_table.table_arn,
-                        ]
-                    )
-                ]),
-                iam.PolicyDocument(statements=[
-                    iam.PolicyStatement(
-                        effect=iam.Effect.ALLOW,
-                        actions=[
-                            'dynamodb:ListTables',
-                        ],
-                        resources=[
-                            '*'
-                        ]
-                    )
-                ]),
                 iam.PolicyDocument(statements=[
                     iam.PolicyStatement(
                         effect=iam.Effect.ALLOW,
@@ -357,7 +321,6 @@ class GlueStack(cdk.Stack):
                 ]),
             ],
             managed_policies=[
-                iam.ManagedPolicy.from_aws_managed_policy_name(
-                    'service-role/AWSGlueServiceRole'),
+                iam.ManagedPolicy.from_aws_managed_policy_name('service-role/AWSGlueServiceRole'),
             ]
         )

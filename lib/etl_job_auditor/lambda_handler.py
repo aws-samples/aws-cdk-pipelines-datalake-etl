@@ -15,7 +15,7 @@ import dateutil.tz
 def load_log_config():
     """
     Configure logging
-    :return: 
+    @return:
     """
     root = logging.getLogger()
     root.setLevel(logging.INFO)
@@ -32,9 +32,10 @@ def lambda_handler(event, context):
     Lambda function's entry point. This function receives a success event
     from Step Functions State machine, transforms error message, and update
     DynamoDB table.
-    :param event:
-    :param context:
-    :return:
+
+    @param event:
+    @param context:
+    @return:
     """
     print(event)
     print(event['Input']['execution_id'])
