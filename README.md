@@ -126,14 +126,13 @@ Table below explains how this source ode structured:
   | [pipeline_stack](lib/pipeline_stack.py) | Pipeline stack entry point |
   | [pipeline_deploy_stage](lib/pipeline_deploy_stage.py) | Pipeline deploy stage entry point |
   | [glue_stack](lib/glue_stack.py) | Stack creates Glue Jobs and supporting resources such as Connections, S3 Buckets - script and temporary - and an IAM execution Role |
-  | [step_functions_stack](lib/step_functions_stack.py) | Stack creates an ETL State machine which triggers Glue Jobs and supporting Lambdas - trigger and notification. |
+  | [step_functions_stack](lib/step_functions_stack.py) | Stack creates an ETL State machine which invokes Glue Jobs and supporting Lambdas - state machine trigger and status notification. |
   | [dynamodb_stack](lib/dynamodb_stack.py) | Stack creates DynamoDB Tables for Job Auditing and ETL transformation rules. |
-  | *lib/glue_scripts*| Glue spark job data processing logic for conform and purpose built layers |
-  | *lib/datalake_blog_failure_status_update* | lambda script to update dynamodb in case of glue job failure  |
-  | *lib/datalake_blog_success_status_update* | lambda script to update dynamodb for successful glue job execution |
-  *lib/datalake_blog_trigger_load* | lambda script to trigger step function and intiate dynamodb |
-  | *lib/dynamodb_config* | Transformation logic to be used for data processing from conform to purpose built |
-  | *resources*| This folder has architecture and process flow diagrams |
+  | [Glue Scripts](lib/glue_scripts) | Glue spark job data processing logic for conform and purpose built layers |
+  | (ETL Job Auditor)[lib/etl_job_auditor/lambda_handler.py] | lambda script to update dynamodb in case of glue job success or failure |
+  | [ETL Trigger](lib/state_machine_trigger/lambda_handler.py) | lambda script to trigger step function and initiate dynamodb |
+  | [ETL Transformation SQL](lib/glue_scripts/transformation-sql) | Transformation logic to be used for data processing from conformed to purpose-built |
+  | [Resources](./resources) | This folder has architecture and process flow diagrams |
 
 ---
 

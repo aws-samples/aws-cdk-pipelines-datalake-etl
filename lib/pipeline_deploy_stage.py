@@ -16,7 +16,7 @@ class PipelineDeployStage(core.Stage):
     def __init__(self, scope: core.Construct, construct_id: str, target_environment: str, **kwargs):
         """
         Adds deploy stage to CodePipeline
-        
+
         @param scope cdk.Construct: Parent of this stack, usually an App or a Stage, but could be any construct.
         @param construct_id str:
             The construct ID of this stack. If stackName is not explicitly defined,

@@ -53,7 +53,7 @@ def get_local_configuration(environment: str) -> dict:
     @param: environment str: The environment used to retrieve corresponding configuration
     @raises: Exception: Throws an exception if the resource_name_prefix does not conform
     @raises: Exception: Throws an exception if the requested environment does not exist
-    @returns: dict:
+    @return: dict:
     """
     local_mapping = {
         DEPLOYMENT: {

@@ -8,7 +8,7 @@ import aws_cdk.aws_codepipeline_actions as codepipeline_actions
 import aws_cdk.aws_iam as iam
 
 from .configuration import (
-    CROSS_ACCOUNT_DYNAMODB_ROLE, DEPLOYMENT, GITHUB_REPOSITORY_NAME, GITHUB_REPOSITORY_OWNER_NAME, GITHUB_TOKEN,
+    DEPLOYMENT, GITHUB_REPOSITORY_NAME, GITHUB_REPOSITORY_OWNER_NAME, GITHUB_TOKEN,
     get_logical_id_prefix, get_all_configurations, get_resource_name_prefix,
 )
 from .pipeline_deploy_stage import PipelineDeployStage

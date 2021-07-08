@@ -8,8 +8,8 @@ from .configuration import (
     PROD, TEST, get_logical_id_prefix, get_resource_name_prefix,
 )
 
-class DynamoDbStack(cdk.Stack):
 
+class DynamoDbStack(cdk.Stack):
     def __init__(self, scope: cdk.Construct, construct_id: str, target_environment: str, **kwargs) -> None:
         """
         CloudFormation stack to create DynamoDB Tables.
@@ -29,28 +29,11 @@ class DynamoDbStack(cdk.Stack):
         if (target_environment == PROD or target_environment == TEST):
             self.removal_policy = cdk.RemovalPolicy.RETAIN
 
-        self.job_audit_table = self.create_table(
-            f'{target_environment}{logical_id_prefix}EtlAuditTable',
-            f'{target_environment.lower()}-{resource_name_prefix}-etl-job-audit',
-            'execution_id',
-        )
-
-    def create_table(self, construct_name, table_name, partition_key, sort_key=None) -> dynamodb.Table:
-        """
-        Creates a DynamoDB table
-
-        :param construct_name: 
-        :param table_name: 
-        :param partition_key: 
-        :param sort_key: 
-        :return: 
-        """
-        return dynamodb.Table(
+        dynamodb.Table(
             self,
-            construct_name,
-            table_name=table_name,
-            partition_key=dynamodb.Attribute(name=partition_key, type=dynamodb.AttributeType.STRING),
-            sort_key=sort_key,
+            f'{target_environment}{logical_id_prefix}EtlAuditTable',
+            table_name=f'{target_environment.lower()}-{resource_name_prefix}-etl-job-audit',
+            partition_key=dynamodb.Attribute(name='execution_id', type=dynamodb.AttributeType.STRING),
             billing_mode=dynamodb.BillingMode.PROVISIONED,
             encryption=dynamodb.TableEncryption.DEFAULT,
             point_in_time_recovery=False,

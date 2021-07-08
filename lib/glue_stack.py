@@ -3,7 +3,6 @@
 
 import aws_cdk.core as cdk
 import aws_cdk.aws_s3 as s3
-import aws_cdk.aws_dynamodb as dynamodb
 import aws_cdk.aws_ec2 as ec2
 import aws_cdk.aws_glue as glue
 import aws_cdk.aws_iam as iam
