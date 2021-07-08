@@ -77,10 +77,10 @@ class StepFunctionsStack(cdk.Stack):
         raw_bucket = s3.Bucket.from_bucket_name(self, id='ImportedRawBucket', bucket_name=raw_bucket_name)
         notification_topic = sns.Topic(self, f'{target_environment}{logical_id_prefix}EtlFailedTopic')
 
-        failure_function = _lambda.Function(
+        status_function = _lambda.Function(
             self,
-            f'{target_environment}{logical_id_prefix}EtlFailureStatusUpdate',
-            function_name=f'{target_environment.lower()}-{resource_name_prefix}-etl-failure-status-update',
+            f'{target_environment}{logical_id_prefix}EtlStatusUpdate',
+            function_name=f'{target_environment.lower()}-{resource_name_prefix}-etl-status-update',
             runtime=_lambda.Runtime.PYTHON_3_8,
             handler='lambda_handler.lambda_handler',
             code=_lambda.Code.from_asset(f'{os.path.dirname(__file__)}/etl_job_auditor'),
@@ -91,30 +91,7 @@ class StepFunctionsStack(cdk.Stack):
             vpc=vpc,
             vpc_subnets=ec2.SubnetSelection(subnet_type=ec2.SubnetType.PRIVATE),
         )
-        failure_function.add_to_role_policy(
-            iam.PolicyStatement(
-                effect=iam.Effect.ALLOW,
-                actions=[
-                    'dynamodb:UpdateItem',
-                ],
-                resources=[job_audit_table.table_arn],
-            )
-        )
-        success_function = _lambda.Function(
-            self,
-            f'{target_environment}{logical_id_prefix}EtlSuccessStatusUpdate',
-            function_name=f'{target_environment.lower()}-{resource_name_prefix}-etl-success-status-update',
-            runtime=_lambda.Runtime.PYTHON_3_8,
-            handler='lambda_handler.lambda_handler',
-            code=_lambda.Code.from_asset(f'{os.path.dirname(__file__)}/etl_job_auditor'),
-            environment={
-                'DYNAMODB_TABLE_NAME': job_audit_table.table_name,
-            },
-            security_groups=[shared_security_group],
-            vpc=vpc,
-            vpc_subnets=ec2.SubnetSelection(subnet_type=ec2.SubnetType.PRIVATE),
-        )
-        success_function.add_to_role_policy(
+        status_function.add_to_role_policy(
             iam.PolicyStatement(
                 effect=iam.Effect.ALLOW,
                 actions=[
@@ -135,7 +112,7 @@ class StepFunctionsStack(cdk.Stack):
         failure_function_task = stepfunctions_tasks.LambdaInvoke(
             self,
             f'{target_environment}{logical_id_prefix}EtlFailureStatusUpdateTask',
-            lambda_function=failure_function,
+            lambda_function=status_function,
             result_path='$.taskresult',
             retry_on_service_exceptions=True,
             output_path='$'
@@ -153,7 +130,7 @@ class StepFunctionsStack(cdk.Stack):
         success_function_task = stepfunctions_tasks.LambdaInvoke(
             self,
             f'{target_environment}{logical_id_prefix}EtlSuccessStatusUpdateTask',
-            lambda_function=success_function,
+            lambda_function=status_function,
             result_path='$.taskresult',
             retry_on_service_exceptions=True,
             output_path='$'
