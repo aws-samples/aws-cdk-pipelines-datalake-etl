@@ -84,6 +84,7 @@ def lambda_handler(event, context):
     logger.info('source system name: ' + p_source_system_name)
     logger.info('table name: ' + p_table_name)
     logger.info('File Path: ' + p_file_dir)
+    logger.info('p_file_dir_upd: ' + p_file_dir_upd)
     logger.info('file base name: ' + p_base_file_name)
     logger.info('state machine arn: ' + sfn_arn)
     logger.info('target bucket name: ' + target_bucket_name)
@@ -123,7 +124,7 @@ def lambda_handler(event, context):
                 'execution_id': execution_id,
             }
         )
-        logger.info("State machine input:", sfn_input)
+        logger.info(sfn_input)
         try:
             sfn_client = boto3.client('stepfunctions')
             sfn_response = sfn_client.start_execution(
