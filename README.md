@@ -6,38 +6,42 @@ This solution helps you deploy ETL processes on data lake using [AWS CDK Pipelin
 
 This solution helps you to:
 
-1. deploy ETL workloads on data lake
+1. deploy ETL jobs on data lake
 1. build CDK applications for your ETL workloads
-1. deploy ETL workloads from a central deployment account to multiple AWS environments such as dev, test, and prod
+1. deploy ETL jobs from a central deployment account to multiple AWS environments such as dev, test, and prod
 1. leverage the benefit of self-mutating feature of CDK Pipelines. For example, whenever you check your CDK app's source code in to your version control system, CDK Pipelines can automatically build, test, and deploy your new version
-1. increase the speed of prototyping, testing, and deployment of new ETL workloads
+1. increase the speed of prototyping, testing, and deployment of new ETL jobs
 
 ---
 
 ## Contents
 
-* [Conceptual Data Lake](#Conceptual-Data-Lake)
-* [Engineering the Data Lake](#Engineering-the-Data-Lake)
-* [Data Lake Infrastructure](#Data-Lake-Infrastructure)
-* [ETL Use Case](#ETL-Use-Case)
-* [Centralized Deployment](##Centralized-Deployment)
-* [Continuous Delivery of ETL Jobs using CDK Pipelines](#Continuous-Delivery-of-ETL-Jobs-using-CDK-Pipelines)
-* [Source Code Structure](#Source-Code-Structure)
-* [Deployment Overview](#deployment-overview)
-* [Before Deployment](#before-deployment)
-  * [AWS Environment Bootstrapping](#aws-environment-bootstrapping)
-  * [Application Configuration](#application-configuration)
-  * [Integration of AWS CodePipeline and GitHub.com](#integration-of-aws-codepipeline-and-github.com)
+* [Data lake](#data-lake)
+  * [Architecture](#architecture)
+  * [Infrastructure](#infrastructure)
+  * [ETL use case](#etl-use-case)
+* [The solution](#the-solution)
+  * [Centralized deployment](#centralized-deployment)
+  * [Continuous delivery of ETL jobs using CDK Pipelines](#continuous-delivery-of-etl-jobs-using-cdk-pipelines)
+  * [Source code structure](#source-code-structure)
 * [Deployment](#deployment)
+  * [Setup infrastructure and bootstrap AWS accounts](#setup-infrastructure-and-bootstrap-aws-accounts)
   * [Deploying for the first time](#deploying-for-the-first-time)
   * [Iterative Deployment](#iterative-deployment)
-* [AWS CDK](#AWS-CDK)
-* [Contributors](#Contributors)
-* [License Summary](#License-Summary)
+* [Additional resources](#additional-resources)
+  * [Clean up](#clean-up)
+  * [AWS CDK](#aws-cdk)
+  * [Developer guide](#developer-guide)
+* [Authors](#authors)
+* [License Summary](#license-summary)
+
+## Data lake
+
+In this section we talk about Data lake architecture and its infrastructure.
 
 ---
 
-## Conceptual Data Lake
+### Architecture
 
 To level set, let us design a data lake. As shown in the figure below, we use Amazon S3 for storage. We use three S3 buckets - 1) raw bucket to store raw data in its original format 2) conformed bucket to store the data that meets the quality requirements of the lake 3) purpose-built data that is used by analysts and data consumers of the lake.
 
@@ -51,24 +55,13 @@ We use AWS Glue for ETL and data cataloging, Amazon Athena for interactive queri
 
 ---
 
-## Engineering the Data Lake
-
-To engineer the data lake, we will create two source code repositories. They are:
-
-1. source code repository for data lake infrastructure
-1. source code repository for ETL process
-
-In a general sense, one code repo is sufficient for the whole data lake infrastructure and each ETL process has its own code repo. We will apply this principle to this solution.
-
----
-
-## Data Lake Infrastructure
+### Infrastructure
 
 Now we have the Data Lake design, let's deploy its infrastructure. You can use [AWS CDK Pipelines for Data Lake Infrastructure Deployment](https://github.com/aws-samples/aws-cdk-pipelines-datalake-infrastructure) for this purpose.
 
 ---
 
-## ETL Use Case
+### ETL use case
 
 To demonstrate the above benefits, we will use [NYC Taxi and Limousine Commission Data](https://www1.nyc.gov/site/tlc/about/tlc-trip-record-data.page) and build a sample ETL process for this. In our Data Lake, we have three S3 buckets - Raw, Conformed, and Purpose-built.
 
@@ -94,13 +87,21 @@ Figure below represents the infrastructure resources we provision for Data Lake.
 
 ---
 
-## Centralized Deployment
+## The solution
+
+We use a centralized deployment model to deploy data lake infrastructure across dev, test, and prod environments.
+
+---
+
+### Centralized deployment
 
 Let us see how we deploy data lake ETL workloads from a central deployment account to multiple AWS environments such as dev, test, and prod. As shown in the figure below, we organize **Data Lake ETL source code** into three branches - dev, test, and production. We use a dedicated AWS account to create CDK Pipelines. Each branch is mapped to a CDK pipeline and it turn mapped to a target environment. This way, code changes made to the branches are deployed iteratively to their respective target environment.
 
 ![Alt](./resources/Aws-cdk-pipelines-blog-datalake-branch_strategy_etl.png)
 
-## Continuous Delivery of ETL Jobs using CDK Pipelines
+---
+
+## Continuous delivery of ETL jobs using CDK Pipelines
 
 Figure below illustrates the continuous delivery of ETL jobs on Data Lake.
 
@@ -115,138 +116,35 @@ There are few interesting details to point out here:
 
 ---
 
-## Source Code Structure
+### Source code structure
 
 Table below explains how this source ode structured:
 
   | File / Folder    | Description  |
   |------------------| -------------|
-  | [app.py](aws_cdk_pipelines_blog_datalake_infrastructure/app.py) | Application entry point |
-  | [pipeline_stack](aws_cdk_pipelines_blog_datalake_infrastructure/pipeline_stack.py) | Pipeline stack entry point |
-  | [pipeline_deploy_stage](aws_cdk_pipelines_blog_datalake_infrastructure/pipeline_deploy_stage.py) | Pipeline deploy stage entry point |
-  | [glue_stack](aws_cdk_pipelines_blog_datalake_infrastructure/glue_stack.py) | ***To be added by Isaiah Grant*** |
-  | [lambda_stack](aws_cdk_pipelines_blog_datalake_infrastructure/vpc_stack.py) | ***To be added by Isaiah Grant*** |
-  | [sfn_stack](aws_cdk_pipelines_blog_datalake_infrastructure/sfn_stack.py) | ***To be added by Isaiah Grant*** |
-  | [sns_stack](aws_cdk_pipelines_blog_datalake_infrastructure/sns_stack.py) | ***To be added by Isaiah Grant*** |
-  | *lib/glue_scripts*| Glue spark job data processing logic for conform and purposebuilt layers |
-  | *lib/datalake_blog_failure_status_update* | lambda script to update dynamodb in case of glue job failure  |
-  | *lib/datalake_blog_success_status_update* | lambda script to update dynamodb for successful glue job execution |
-  *lib/datalake_blog_trigger_load* | lambda script to trigger step function and intiate dynamodb |
-  | *lib/dynamodb_config* | Transformation logic to be used for data processing from conform to purpose built |
-  | *resources*| This folder has architecture and process flow diagrams for Infrastructure and CDK Pipelines |
-
----
-
-## Before Deployment
-
-We provided the following scripts to complete pre-deployment steps:
-
-  | # | Script    | Purpose  |
-  | --|-----------| -------------|
-  | 1 | [bootstrap_deployment_account.sh](./lib/prerequisites/bootstrap_deployment_account.sh) | ***To be added by Isaiah Grant*** |
-  | 2 | [bootstrap_target_account.sh](./lib/prerequisites/bootstrap_target_account.sh) | ***To be added by Isaiah Grant*** |
-  | 3 | [configure_account_parameters.py](./lib/prerequisites/configure_account_parameters.py) | ***To be added by Isaiah Grant*** |
-  | 4 | [configure_account_secrets.py](./lib/prerequisites/configure_account_secrets.py) | ***To be added by Isaiah Grant*** | 
-
-Before you proceed further, make sure you configured your AWS CLI. If not, refer to [Configuring the AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-configure.html) for more details.
-
-### AWS Environment Bootstrapping
-
-Environment bootstrap is standard CDK process to prepare an AWS environment ready for deployment. Follow the steps:
-
- 1. Bootstrap central deployment account, run the below command:
-
-    ```{bash}
-    ./lib/prerequisites/bootstrap_deployment_account.sh
-    ```
-
-    **Important:** Your configured environment *must* target the centralized deployment account
-
- 1. Expected output: ***To be added by Isaiah Grant***
-
- 1. Bootstrap dev account, run the below command:
-
-    ```{bash}
-    ./lib/prerequisites/bootstrap_target_account.sh <central_deployment_account_id>
-    ```
-
-    **Important:** Your configured environment *must* target the appropriate account for **each** account
-
- 1. Expected output: ***To be added by Isaiah Grant***
-
- 1. Bootstrap test account, run the below command:
-
-    ```{bash}
-    ./lib/prerequisites/bootstrap_target_account.sh <central_deployment_account_id>
-    ```
-
- 1. Expected output: ***To be added by Isaiah Grant***
-
- 1. Bootstrap prod account, run the below command:
-
-    ```{bash}
-    ./lib/prerequisites/bootstrap_target_account.sh <central_deployment_account_id>
-    ```
-
- 1. Expected output: ***To be added by Isaiah Grant***
-
----
-
-### Application Configuration
-
-Before we deploy our resources we must provide the manual variables and upon deployment the CDK Pipelines will programmatically provide variables for managed resources. We use [AWS Systems Manager Parameter Store](https://docs.aws.amazon.com/systems-manager/latest/userguide/systems-manager-parameter-store.html) for this and they are are stored in the central deployment account. Follow the below steps:
-
-1. **Note:** It is safe to commit these values to your repository
-
-1. Go  to, [configure_account_parameters.py](./lib/prerequisites/configure_account_parameters.py) and fill in values of the `all_parameters` dict as desired
-
-1. run the below command to configure parameters for **dev** account
-
-   ```{bash}
-   # First configure AWS for the Deployment Account
-   python3 ./lib/prerequisites/configure_account_parameters.py Dev
-   ```
-
-1. Expected output: ***To be added by Isaiah Grant***
-
-1. run the below command to configure parameters for **test** account
-
-   ```{bash}
-   # First configure AWS for the Deployment Account
-   ./lib/prerequisites/configure_account_parameters.sh Test
-   ```
-
-1. Expected output: ***To be added by Isaiah Grant***
-
-1. run the below command to configure parameters for **prod** account
-
-   ```{bash}
-   # First configure AWS for the Deployment Account
-   ./lib/prerequisites/ configure_account_parameters.sh Prod
-   ```
-
-1. Expected output: ***To be added by Isaiah Grant***
-
----
-
-### Integration of AWS CodePipeline and GitHub.com
-
-Integration between AWS CodePipeline and GitHub requires a personal access token. This access token is stored in Secrets Manager. This is a one-time setup and is applicable for all target AWS environments and all repositories created under the organization in GitHub.com. Follow the below steps:
-
-1. **Note:** Do NOT commit these values to your repository
-1. Go to, [configure_account_secrets.py](./lib/prerequisites/configure_account_secrets.py) and fill in values of the `all_parameters` dict as desired
-1. Run the below command
-
-   ```{bash}
-   # First configure AWS for the Deployment Account
-   ./lib/prerequisites/configure_account_secrets.sh Deployment
-   ```
-
-1. Expected output: ***To be added by Isaiah Grant***
+  | [app.py](app.py) | Application entry point |
+  | [pipeline_stack](lib/pipeline_stack.py) | Pipeline stack entry point |
+  | [pipeline_deploy_stage](lib/pipeline_deploy_stage.py) | Pipeline deploy stage entry point |
+  | [glue_stack](lib/glue_stack.py) | Stack creates Glue Jobs and supporting resources such as Connections, S3 Buckets - script and temporary - and an IAM execution Role |
+  | [step_functions_stack](lib/step_functions_stack.py) | Stack creates an ETL State machine which invokes Glue Jobs and supporting Lambdas - state machine trigger and status notification. |
+  | [dynamodb_stack](lib/dynamodb_stack.py) | Stack creates DynamoDB Tables for Job Auditing and ETL transformation rules. |
+  | [Glue Scripts](lib/glue_scripts) | Glue spark job data processing logic for conform and purpose built layers |
+  | [ETL Job Auditor](lib/etl_job_auditor/lambda_handler.py) | lambda script to update dynamodb in case of glue job success or failure |
+  | [ETL Trigger](lib/state_machine_trigger/lambda_handler.py) | lambda script to trigger step function and initiate dynamodb |
+  | [ETL Transformation SQL](lib/glue_scripts/transformation-sql) | Transformation logic to be used for data processing from conformed to purpose-built |
+  | [Resources](./resources) | This folder has architecture and process flow diagrams |
 
 ---
 
 ## Deployment
+
+This section provides deployment instructions.
+
+---
+
+### Setup infrastructure and bootstrap AWS accounts
+
+This project is dependent on the [AWS CDK Pipelines for Data Lake Infrastructure Deployment](https://github.com/aws-samples/aws-cdk-pipelines-datalake-infrastructure). Please reference the [Prerequisites section in README](https://github.com/aws-samples/aws-cdk-pipelines-datalake-infrastructure#prerequisites).
 
 ### Deploying for the first time
 
@@ -255,7 +153,29 @@ Configure your AWS profile to target the central Deployment account as an Admini
 1. Open command line (terminal)
 1. Go to project root directory where ```cdk.json``` and ```app.py``` exist
 1. Run the command ```cdk ls```
-1. Expected output: It lists the name of the CDK Pipeline on the console
+1. Expected output. You will see the following CloudFormation stack names listed on your terminal
+
+   ```bash
+   DevDataLakeCDKBlogEtlPipeline
+   ProdDataLakeCDKBlogEtlPipeline
+   TestDataLakeCDKBlogEtlPipeline
+   DevDataLakeCDKBlogEtlPipeline/Dev/DevDataLakeCDKBlogEtlDynamoDb
+   DevDataLakeCDKBlogEtlPipeline/Dev/DevDataLakeCDKBlogEtlGlue
+   DevDataLakeCDKBlogEtlPipeline/Dev/DevDataLakeCDKBlogEtlStepFunctions
+   ProdDataLakeCDKBlogEtlPipeline/Prod/ProdDataLakeCDKBlogEtlDynamoDb
+   ProdDataLakeCDKBlogEtlPipeline/Prod/ProdDataLakeCDKBlogEtlGlue
+   ProdDataLakeCDKBlogEtlPipeline/Prod/ProdDataLakeCDKBlogEtlStepFunctions
+   TestDataLakeCDKBlogEtlPipeline/Test/TestDataLakeCDKBlogEtlDynamoDb
+   TestDataLakeCDKBlogEtlPipeline/Test/TestDataLakeCDKBlogEtlGlue
+   TestDataLakeCDKBlogEtlPipeline/Test/TestDataLakeCDKBlogEtlStepFunctions
+   ```
+
+1. Before you bootstrap central deployment account account, set environment variable
+
+   ```bash
+   export AWS_PROFILE=replace_it_with_deployment_account_profile_name_b4_running
+   ```
+
 1. Run the command ```cdk deploy --all```
 1. Expected output:
     1. It creates new Pipelines in CodePipeline in the Deployment account
@@ -272,89 +192,142 @@ Pipeline you have created using CDK Pipelines module is self mutating. That mean
 
 ## Testing
 
-### Prerequistes:
-Below lists steps are required before starting the job testing:
-
-* For ETL job testing TLC Trip Record Data public data is being used, https://www1.nyc.gov/site/tlc/about/tlc-trip-record-data.page
-
-On the mentioned link multiple years of data is available, you can download data from 2020
-
-   *  Download Yellow Taxi Trip Records for August month from 2020. [Download data](https://nyc-tlc.s3.amazonaws.com/trip+data/yellow_tripdata_2020-08.csv)
-   * Make sure the transformation logic is entered in dynamodb for <> table. As part of job creation mentioned transformation logic will be used to transform data from raw to conform:
-
-   ```
-   SELECT count(*) count,coalesce(vendorid,-1)vendorid,day,month,year,pulocationid,dolocationid,      payment_type,sum(passenger_count)passenger_count,sum(trip_distance) total_trip_distance,sum(fare_amount)total_fare_amount,sum(extra)total_extra, sum(tip_amount)total_tip_amount,sum(tolls_amount)total_tolls_amount,sum(total_amount)total_amount
-   FROM "datalake_raw_source"."yellow_taxi_trip_record" 
-   group by vendorid,day,month,year,day,month,year,pulocationid,dolocationid,payment_type
-
-   ```
-   * Create a folder under raw bucket `{target_environment.lower()}-{resource_name_prefix}-{self.account}-{self.region}-raw` root path, this folder name will be used as source_system_name. You can use `tlc_taxi_data` or name of your choice.
-   * Go to the created folder and create child folder named `yellow_taxi_trip_record` or you can name it per your choice
-   * Make sure Athena has workgroup to execute queries for data validations. [Setting up Athena Workgroups](https://docs.aws.amazon.com/athena/latest/ug/workgroups-procedure.html) 
-   * Make sure Athena has S3 buckets for query results [Getting started](https://docs.aws.amazon.com/athena/latest/ug/getting-started.html)
-   
-### Steps for ETL testing:   
-
-1. Upload downloaded file `yellow_tripdata_2020-01.csv` to Raw bucket `s3://{target_environment.lower()}-{resource_name_prefix}-{self.account}-{self.region}-raw/tlc_taxi_data/yellow_taxi_trip_record/`
-1. Upon successful load of file S3 event notification will trigger the lambda
-1. Lambda will insert record into the dynamodb table `{target_environment.lower()}-{resource_name_prefix}-etl-job-audit` to track job start status
-1. Lambda function will trigger the step function. Step function name will be `<filename>-<YYYYMMDDHHMMSSxxxxxx>` and provided the required metadata input
-1. Step function will trigger the glue job for Raw to Conformed data processing.
-1. Glue job will load the data into conformed bucket using the provided metadata and data will be loaded to `s3://{target_environment.lower()}-{resource_name_prefix}-{self.account}-{self.region}-conformed/tlc_taxi_data/yellow_taxi_trip_record/year=YYYY/month=MM/day=DD` in parquet format
-1. Glue job will create/update the catalog table using the tablename passed as parameter based on folder name `yellow_taxi_trip_record` as being mentioned in prequisites 
-1. After raw to conform job completion purpose-built glue job will get triggered in step function
-1. Purpose built glue job will use the tranformation logic being provided in dynamodb as part of prerequistes for data transformation
-1. Purpose built glue job will store the result set in S3 bucket under `s3://{target_environment.lower()}-{resource_name_prefix}-{self.account}-{self.region}-purposebuilt/tlc_taxi_data/yellow_taxi_trip_record/year=YYYY/month=MM/day=DD`
-1. Purpose built glue job will create/update the catalog table
-1. After completion of glue job lambda will get triggered in step funtion to update the dynamodb table `{target_environment.lower()}-{resource_name_prefix}-etl-job-audit` with latest status
-1. SNS notification will be sent to the subscribed users
-1. To validate the data, please open Athena service and execute query. For testing purpose below mentioned query is being used 
-
-```
-SELECT * FROM "datablog_arg"."yellow_taxi_trip_record" limit 10;
-```
-
-For testing of `second data source`, download the Green Taxi Trip data [Data source](https://nyc-tlc.s3.amazonaws.com/trip+data/green_tripdata_2020-08.csv)
-
-Perform the prerequisites for second source, where create child folder `yellow_taxi_trip_record` under could be `tlc_taxi_data` in `s3://{target_environment.lower()}-{resource_name_prefix}-{self.account}-{self.region}-raw`
-
-For dynamodb transformation logic you can use the below mentioned query:
-
-```
-SELECT count(*) count,coalesce(vendorid,-1)vendorid,day,month,year,pulocationid,dolocationid,payment_type,sum(passenger_count)passenger_count,sum(trip_distance) total_trip_distance,sum(fare_amount)total_fare_amount,sum(extra)total_extra, sum(tip_amount)total_tip_amount,sum(tolls_amount)total_tolls_amount,sum(total_amount)total_amount
-FROM "datalake_raw_source"."green_taxi_record_data" 
-group by vendorid,day,month,year,day,month,year,pulocationid,dolocationid,payment_type
-```
-
-For testing follow the same above mentioned steps from 1-14 with respect to new source
-
-
-
-
-
-**To be added Zahid Muhammad Ali***
-
-
+This section provides testing instructions.
 
 ---
 
-## AWS CDK
+### Prerequisites
+
+Below lists steps are required before starting the job testing:
+
+1. **Note:** We use [New York City TLC Trip Record Data.](https://www1.nyc.gov/site/tlc/about/tlc-trip-record-data.page)
+
+1. Download Yellow Taxi Trip Records for [August-2020](https://nyc-tlc.s3.amazonaws.com/trip+data/yellow_tripdata_2020-08.csv)
+
+1. Make sure the transformation logic is entered in dynamodb for <> table. As part of job creation mentioned transformation logic will be used to transform data from raw to conform:
+
+   ```sql
+   SELECT count(*) count, coalesce(vendorid,-1) vendorid, day, month, year, pulocationid, dolocationid, payment_type, sum(passenger_count) passenger_count, sum(trip_distance) total_trip_distance, sum(fare_amount) total_fare_amount, sum(extra) total_extra, sum(tip_amount) total_tip_amount, sum(tolls_amount) total_tolls_amount, sum(total_amount) total_amount
+   FROM datalake_raw_source.yellow_taxi_trip_record
+   GROUP BY vendorid, day, month, year, day, month, year, pulocationid, dolocationid, payment_type;
+   ```
+
+1. Create a folder under raw bucket `{target_environment.lower()}-{resource_name_prefix}-{self.account}-{self.region}-raw` root path, this folder name will be used as source_system_name. You can use `tlc_taxi_data` or name of your choice.
+
+1. Go to the created folder and create child folder named `yellow_taxi_trip_record` or you can name it per your choice
+
+1. Configure Athena workgroup before you run queries via Amazon Athena. For more details, refer [Setting up Athena Workgroups](https://docs.aws.amazon.com/athena/latest/ug/workgroups-procedure.html).
+
+---
+
+### Steps for ETL testing
+
+1. Go to raw S3 bucket and perform the following steps:
+    1. create a folder with name ```tlc_taxi_data``` and go to it
+    1. create a folder with name ```yellow_taxi_trip_record``` and go to it
+    1. upload the file `yellow_tripdata_2020-01.csv`
+
+1. Upon successful load of file S3 event notification will trigger the lambda
+
+1. Lambda will insert record into the dynamodb table `{target_environment.lower()}-{resource_name_prefix}-etl-job-audit` to track job start status
+
+1. Lambda function will trigger the step function. Step function name will be `<filename>-<YYYYMMDDHHMMSSxxxxxx>` and provided the required metadata input
+
+1. Step functions state machine will trigger the Glue job for Raw to Conformed data processing.
+
+1. Glue job will load the data into conformed bucket using the provided metadata and data will be loaded to `s3://{target_environment.lower()}-{resource_name_prefix}-{self.account}-{self.region}-conformed/tlc_taxi_data/yellow_taxi_trip_record/year=YYYY/month=MM/day=DD` in parquet format
+
+1. Glue job will create/update the catalog table using the tablename passed as parameter based on folder name `yellow_taxi_trip_record` as being mentioned in prerequisites
+
+1. After raw to conform job completion purpose-built glue job will get triggered in step function
+
+1. Purpose built glue job will use the transformation logic being provided in dynamodb as part of prerequisites for data transformation
+
+1. Purpose built glue job will store the result set in S3 bucket under `s3://{target_environment.lower()}-{resource_name_prefix}-{self.account}-{self.region}-purposebuilt/tlc_taxi_data/yellow_taxi_trip_record/year=YYYY/month=MM/day=DD`
+
+1. Purpose built glue job will create/update the catalog table
+
+1. After completion of glue job lambda will get triggered in step function to update the dynamodb table `{target_environment.lower()}-{resource_name_prefix}-etl-job-audit` with latest status
+
+1. SNS notification will be sent to the subscribed users
+
+1. To validate the data, please open Athena service and execute query. For testing purpose below mentioned query is being used 
+
+   ```sql
+   SELECT * FROM "datablog_arg"."yellow_taxi_trip_record" limit 10;
+   ```
+
+1. For testing of `second data source`, Download Green Taxi Trip Records for [August-2020](https://nyc-tlc.s3.amazonaws.com/trip+data/green_tripdata_2020-08.csv)
+
+1. Perform the prerequisites for second source, where create child folder `yellow_taxi_trip_record` under could be `tlc_taxi_data` in `s3://{target_environment.lower()}-{resource_name_prefix}-{self.account}-{self.region}-raw`
+
+1. For dynamodb transformation logic you can use the below mentioned query:
+
+   ```sql
+   SELECT count(*) count, coalesce(vendorid,-1) vendorid, day, month, year, pulocationid, dolocationid, payment_type, sum(passenger_count) passenger_count, sum(trip_distance) total_trip_distance, sum(fare_amount) total_fare_amount, sum(extra) total_extra, sum(tip_amount) total_tip_amount, sum(tolls_amount) total_tolls_amount, sum(total_amount) total_amount
+   FROM datalake_raw_source.green_taxi_record_data
+   GROUP BY vendorid, day, month, year, day, month, year, pulocationid, dolocationid, payment_type
+   ```
+
+---
+
+## Additional resources
+
+In this section, we provide some additional resources.
+
+---
+
+### Clean up
+
+1. Delete stacks using the command ```cdk destroy --all```. When you see the following text, enter **y**, and press enter/return.
+
+   ```bash
+   Are you sure you want to delete: TestDataLakeCDKBlogEtlPipeline, ProdDataLakeCDKBlogEtlPipeline, DevDataLakeCDKBlogEtlPipeline (y/n)?
+   ```
+
+   Note: This operation deletes stacks only in central deployment account
+
+1. To delete stacks in **development** account, log onto Dev account, go to AWS CloudFormation console and delete the following stacks:
+
+   1. Dev-DevDataLakeCDKBlogEtlDynamoDb
+   1. Dev-DevDataLakeCDKBlogEtlGlue
+   1. Dev-DevDataLakeCDKBlogEtlStepFunctions
+
+1. To delete stacks in **test** account, log onto Dev account, go to AWS CloudFormation console and delete the following stacks:
+
+   1. Test-TestDataLakeCDKBlogEtlDynamoDb
+   1. Test-TestDataLakeCDKBlogEtlGlue
+   1. Test-TestDataLakeCDKBlogEtlStepFunctions
+
+1. To delete stacks in **prod** account, log onto Dev account, go to AWS CloudFormation console and delete the following stacks:
+
+   1. Prod-ProdDataLakeCDKBlogEtlDynamoDb
+   1. Prod-ProdDataLakeCDKBlogEtlGlue
+   1. Prod-ProdDataLakeCDKBlogEtlStepFunctions
+
+1. For more details refer to [AWS CDK Toolkit](https://docs.aws.amazon.com/cdk/latest/guide/cli.html)
+
+---
+
+### AWS CDK
 
 Refer to [cdk_instructions.md](./resources/cdk_instructions.md) for detailed instructions
 
 ---
 
-## Developers
+### Developer guide
 
-Refer to [developer_instructions.md](./resources/developer_instructions.md) for notes to Developers on this project
+Refer to [Developer Guide](resources/developer_guide.md) for more information on this project
 
 ---
 
-## Contributors
+## Authors
 
-1. **Ravi Itha**, Senior Data Architect, Amazon Web Services
-1. **Muhammad Zahid Ali**, Data Architect, Amazon Web Services
+The following people are involved in the design, architecture, development, and testing of this solution:
+
 1. **Isaiah Grant**, Cloud Consultant, 2nd Watch, Inc.
+1. **Muhammad Zahid Ali**, Data Architect, Amazon Web Services
+1. **Ravi Itha**, Senior Data Architect, Amazon Web Services
 
 ---
 

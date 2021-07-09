@@ -26,9 +26,15 @@ GITHUB_TOKEN = 'github_token'
 
 # Used in Automated Outputs
 VPC_ID = 'vpc_id'
-AVAILABILITY_ZONES = 'availability_zones'
-SUBNET_IDS = 'subnet_ids'
-ROUTE_TABLES = 'route_tables'
+AVAILABILITY_ZONE_1 = 'availability_zone_1'
+AVAILABILITY_ZONE_2 = 'availability_zone_2'
+AVAILABILITY_ZONE_3 = 'availability_zone_3'
+SUBNET_ID_1 = 'subnet_id_1'
+SUBNET_ID_2 = 'subnet_id_2'
+SUBNET_ID_3 = 'subnet_id_3'
+ROUTE_TABLE_1 = 'route_table_1'
+ROUTE_TABLE_2 = 'route_table_2'
+ROUTE_TABLE_3 = 'route_table_3'
 SHARED_SECURITY_GROUP_ID = 'shared_security_group_id'
 S3_KMS_KEY = 's3_kms_key'
 S3_ACCESS_LOG_BUCKET = 's3_access_log_bucket'
@@ -37,17 +43,17 @@ S3_CONFORMED_BUCKET = 's3_conformed_bucket'
 S3_PURPOSE_BUILT_BUCKET = 's3_purpose_built_bucket'
 CROSS_ACCOUNT_DYNAMODB_ROLE = 'cross_account_dynamodb_role'
 
+GLUE_CONNECTION_AVAILABILITY_ZONE = 'glue_connection_availability_zone'
+GLUE_CONNECTION_SUBNET = 'glue_connection_subnet'
+
 
 def get_local_configuration(environment: str) -> dict:
     """
     Provides manually configured variables that are validated for quality and safety.
-
     @param: environment str: The environment used to retrieve corresponding configuration
-
     @raises: Exception: Throws an exception if the resource_name_prefix does not conform
     @raises: Exception: Throws an exception if the requested environment does not exist
-
-    @returns: dict:
+    @return: dict:
     """
     local_mapping = {
         DEPLOYMENT: {
@@ -56,11 +62,11 @@ def get_local_configuration(environment: str) -> dict:
             GITHUB_REPOSITORY_OWNER_NAME: '',
             GITHUB_REPOSITORY_NAME: '',
             # This is used in the Logical Id of CloudFormation resources.
-            #   We recommend Capital case for consistency.
+            # We recommend Capital case for consistency.
             # Example: DataLakeCdkBlog
             LOGICAL_ID_PREFIX: '',
             # Important: This is used in resources that must be **globally** unique!
-            #   Resource names may only contain Alphanumeric and hyphens and cannot contain trailing hyphens.
+            # Resource names may only contain Alphanumeric and hyphens and cannot contain trailing hyphens.
             # Example: unique-identifier-data-lake
             RESOURCE_NAME_PREFIX: '',
         },
@@ -98,17 +104,21 @@ def get_local_configuration(environment: str) -> dict:
 def get_environment_configuration(environment: str) -> dict:
     """
     Provides all configuration values for the given target environment
-
     @param environment str: The environment used to retrieve corresponding configuration
-
     @return: dict:
     """
     cloudformation_output_mapping = {
         ENVIRONMENT: environment,
         VPC_ID: f'{environment}VpcId',
-        AVAILABILITY_ZONES: f'{environment}AvailabilityZones',
-        SUBNET_IDS: f'{environment}SubnetIds',
-        ROUTE_TABLES: f'{environment}RouteTables',
+        AVAILABILITY_ZONE_1: f'{environment}AvailabilityZone1',
+        AVAILABILITY_ZONE_2: f'{environment}AvailabilityZone2',
+        AVAILABILITY_ZONE_3: f'{environment}AvailabilityZone3',
+        SUBNET_ID_1: f'{environment}SubnetId1',
+        SUBNET_ID_2: f'{environment}SubnetId2',
+        SUBNET_ID_3: f'{environment}SubnetId3',
+        ROUTE_TABLE_1: f'{environment}RouteTable1',
+        ROUTE_TABLE_2: f'{environment}RouteTable2',
+        ROUTE_TABLE_3: f'{environment}RouteTable3',
         SHARED_SECURITY_GROUP_ID: f'{environment}SharedSecurityGroupId',
         S3_KMS_KEY: f'{environment}S3KmsKeyArn',
         S3_ACCESS_LOG_BUCKET: f'{environment}S3AccessLogBucket',
@@ -125,7 +135,6 @@ def get_all_configurations() -> dict:
     """
     Returns a dict mapping of configurations for all environments.
     These keys correspond to static values, CloudFormation outputs, and Secrets Manager (passwords only) records.
-
     @return: dict:
     """
     return {
@@ -142,7 +151,6 @@ def get_all_configurations() -> dict:
 
 def get_logical_id_prefix() -> str:
     """Returns the logical id prefix to apply to all CloudFormation resources
-
     @return: str:
     """
     return get_local_configuration(DEPLOYMENT)[LOGICAL_ID_PREFIX]
@@ -150,7 +158,6 @@ def get_logical_id_prefix() -> str:
 
 def get_resource_name_prefix() -> str:
     """Returns the resource name prefix to apply to all resources names
-
     @return: str:
     """
     return get_local_configuration(DEPLOYMENT)[RESOURCE_NAME_PREFIX]

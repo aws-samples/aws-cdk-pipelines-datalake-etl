@@ -8,7 +8,7 @@ import aws_cdk.aws_codepipeline_actions as codepipeline_actions
 import aws_cdk.aws_iam as iam
 
 from .configuration import (
-    CROSS_ACCOUNT_DYNAMO_ROLE, DEPLOYMENT, GITHUB_REPOSITORY_NAME, GITHUB_REPOSITORY_OWNER_NAME, GITHUB_TOKEN,
+    DEPLOYMENT, GITHUB_REPOSITORY_NAME, GITHUB_REPOSITORY_OWNER_NAME, GITHUB_TOKEN,
     get_logical_id_prefix, get_all_configurations, get_resource_name_prefix,
 )
 from .pipeline_deploy_stage import PipelineDeployStage
@@ -55,7 +55,6 @@ class PipelineStack(cdk.Stack):
         mappings = get_all_configurations()
         source_artifact = codepipeline.Artifact()
         cloud_assembly_artifact = codepipeline.Artifact()
-
         logical_id_prefix = get_logical_id_prefix()
         resource_name_prefix = get_resource_name_prefix()
 
@@ -132,31 +131,4 @@ class PipelineStack(cdk.Stack):
             target_environment=target_environment,
             env=target_aws_env,
         )
-        app_stage = pipeline.add_application_stage(deploy_stage)
-
-        cross_account_role = cdk.Fn.importValue(mappings[target_environment][CROSS_ACCOUNT_DYNAMO_ROLE])
-        # Dynamically manage extract list
-        app_stage.add_actions(
-            pipelines.ShellScriptAction(
-                action_name='UploadTransformationRules',
-                additional_artifacts=[source_artifact],
-                run_order=app_stage.next_sequential_run_order(),
-                commands=[
-                    'pip3 install boto3',
-                    'python3 ./lib/dynamodb_config/datalake_blog_conformed_sync.py '
-                    f'{target_environment} {cross_account_role}',
-                ],
-                role_policy_statements=[
-                    iam.PolicyStatement(
-                        sid='AssumeRolePolicy',
-                        effect=iam.Effect.ALLOW,
-                        actions=[
-                            'sts:AssumeRole',
-                        ],
-                        resources=[
-                            cross_account_role,
-                        ],
-                    )
-                ]
-            )
-        )
+        pipeline.add_application_stage(deploy_stage)

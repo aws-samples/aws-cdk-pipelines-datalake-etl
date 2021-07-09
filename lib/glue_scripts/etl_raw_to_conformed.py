@@ -21,11 +21,9 @@ args = getResolvedOptions(
     [
         'JOB_NAME',
         'target_databasename',
-        'target_tablename',
         'target_bucketname',
         'source_bucketname',
         'source_key',
-        'source_system_name',
         'base_file_name',
         'p_year',
         'p_month',
@@ -60,6 +58,7 @@ def table_exists(target_database, table_name):
 def create_database():
     """
     Function to create catalog database if does not exists
+    @return:
     """
     response = None
 
@@ -192,7 +191,7 @@ def main():
     spark.conf.set('spark.sql.sources.partitionOverwriteMode', 'dynamic')
     spark.conf.set('hive.exec.dynamic.partition', 'true')
     spark.conf.set('hive.exec.dynamic.partition.mode', 'nonstrict')
-f
+
     dynamic_df = DynamicFrame.fromDF(df, glueContext, 'table_df')
     dynamic_df.show(5)
     mapped_dyF = Map.apply(frame=dynamic_df, f=add_partition)
