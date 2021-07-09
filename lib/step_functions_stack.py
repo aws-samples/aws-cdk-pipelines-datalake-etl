@@ -14,6 +14,7 @@ import aws_cdk.aws_sns as sns
 import aws_cdk.aws_stepfunctions as stepfunctions
 import aws_cdk.aws_stepfunctions_tasks as stepfunctions_tasks
 
+
 from .configuration import (
     AVAILABILITY_ZONE_1, AVAILABILITY_ZONE_2, AVAILABILITY_ZONE_3, 
     ROUTE_TABLE_1, ROUTE_TABLE_2, ROUTE_TABLE_3,
@@ -118,7 +119,8 @@ class StepFunctionsStack(cdk.Stack):
             lambda_function=status_function,
             result_path='$.taskresult',
             retry_on_service_exceptions=True,
-            output_path='$'
+            output_path='$',
+            payload=stepfunctions.TaskInput.from_object({'Input.$': '$'})
         )
         failure_notification_task = stepfunctions_tasks.SnsPublish(
             self,
@@ -136,7 +138,8 @@ class StepFunctionsStack(cdk.Stack):
             lambda_function=status_function,
             result_path='$.taskresult',
             retry_on_service_exceptions=True,
-            output_path='$'
+            output_path='$',
+            payload=stepfunctions.TaskInput.from_object({'Input.$': '$'})
         )
         success_task = stepfunctions_tasks.SnsPublish(
             self,
@@ -166,9 +169,9 @@ class StepFunctionsStack(cdk.Stack):
             }),
             output_path='$',
             result_path='$.taskresult',
+            integration_pattern=stepfunctions.IntegrationPattern.RUN_JOB,
             comment='Raw to conformed data load',
         )
-        
         glue_raw_task.add_catch(failure_function_task, result_path='$.taskresult',)
 
         glue_conformed_task = stepfunctions_tasks.GlueStartJobRun(
@@ -185,6 +188,7 @@ class StepFunctionsStack(cdk.Stack):
             }),
             output_path='$',
             result_path='$.taskresult',
+            integration_pattern=stepfunctions.IntegrationPattern.RUN_JOB,
             comment='Conformed to purpose-built data load',
         )
         glue_conformed_task.add_catch(failure_function_task, result_path='$.taskresult',)

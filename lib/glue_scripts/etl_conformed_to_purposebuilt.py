@@ -23,7 +23,7 @@ args = getResolvedOptions(
         'JOB_NAME',
         'txn_bucket_name',
         'txn_sql_prefix_path',
-        'target_databasename',
+        'target_database_name',
         'target_bucketname',
         'base_file_name',
         'p_year',
@@ -66,7 +66,7 @@ def create_database():
     response = None
 
     glue_client = boto3.client('glue')
-    database_name = args['target_databasename']
+    database_name = args['target_database_name']
 
     try:
         # global response
@@ -200,7 +200,7 @@ def main():
 
     target_s3_location = "s3://" + args['target_bucketname'] + "/datalake_blog/"
     storage_location = target_s3_location + args['table_name']
-    upsert_catalog_table(df, args['target_databasename'], args['table_name'], 'PARQUET', storage_location)
+    upsert_catalog_table(df, args['target_database_name'], args['table_name'], 'PARQUET', storage_location)
 
     spark.conf.set('spark.sql.sources.partitionOverwriteMode', 'dynamic')
     spark.conf.set('hive.exec.dynamic.partition', 'true')
@@ -208,7 +208,7 @@ def main():
 
     df.write.partitionBy('year', 'month', 'day').format('parquet').save(storage_location, mode='overwrite')
 
-    target_table_name = args['target_databasename'] + '.' + args['table_name']
+    target_table_name = args['target_database_name'] + '.' + args['table_name']
     spark.sql(f'ALTER TABLE {target_table_name} RECOVER PARTITIONS')
 
 
