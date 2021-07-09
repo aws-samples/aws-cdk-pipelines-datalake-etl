@@ -14,5 +14,5 @@ SELECT
     sum(tip_amount) total_tip_amount,
     sum(tolls_amount) total_tolls_amount,
     sum(total_amount) total_amount
-FROM datalake_raw_source.green_taxi_record_data
+FROM tlc_taxi_data.green_taxi_record_data
 GROUP BY vendorid, day, month, year, day, month, year, pulocationid, dolocationid, payment_type
