@@ -168,7 +168,7 @@ class StepFunctionsStack(cdk.Stack):
             comment='Raw to conformed data load',
         )
         
-        glue_raw_task.add_catch(failure_function_task, result_path='$.taskresult', output_path='$',)
+        glue_raw_task.add_catch(failure_function_task, result_path='$.taskresult',)
 
         glue_conformed_task = stepfunctions_tasks.GlueStartJobRun(
             self,
@@ -185,7 +185,7 @@ class StepFunctionsStack(cdk.Stack):
             output_path='$',
             comment='Conformed to purpose-built data load',
         )
-        glue_conformed_task.add_catch(failure_function_task, result_path='$.taskresult', output_path='$',)
+        glue_conformed_task.add_catch(failure_function_task, result_path='$.taskresult',)
 
         machine_definition = glue_raw_task.next(
             glue_conformed_task.next(success_function_task)
