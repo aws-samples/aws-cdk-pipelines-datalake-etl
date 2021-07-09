@@ -150,17 +150,20 @@ class StepFunctionsStack(cdk.Stack):
             f'{target_environment}{logical_id_prefix}GlueRawJobTask',
             glue_job_name=raw_to_conformed_job.name,
             arguments=stepfunctions.TaskInput.from_object({
-                '--source_key.$': '$.source_key',
-                '--source_system_name.$': '$.source_system_name',
-                '--table_name.$': '$.table_name',
+                '--JOB_NAME.$': 'raw_to_conformed_etl_job',
+                '--target_databasename.$': '$.target_databasename',
+                '--target_bucketname.$': 'TBA',
                 '--source_bucketname.$': '$.source_bucketname',
+                '--source_key.$': '$.source_key',
                 '--base_file_name.$': '$.base_file_name',
                 '--p_year.$': '$.p_year',
                 '--p_month.$': '$.p_month',
-                '--p_day.$': '$.p_day'
+                '--p_day.$': '$.p_day',
+                '--table_name.$': '$.table_name'
             }),
-            comment='Stage to Raw data load',
+            comment='Raw to conformed data load',
         )
+        
         glue_raw_task.add_catch(failure_function_task, result_path='$.taskresult')
 
         glue_conformed_task = stepfunctions_tasks.GlueStartJobRun(
@@ -177,7 +180,7 @@ class StepFunctionsStack(cdk.Stack):
                 '--p_month.$': '$.p_month',
                 '--p_day.$': '$.p_day'
             }),
-            comment='Raw to Conformed data load',
+            comment='Conformed to purpose-built data load',
         )
         glue_conformed_task.add_catch(failure_function_task, result_path='$.taskresult')
 

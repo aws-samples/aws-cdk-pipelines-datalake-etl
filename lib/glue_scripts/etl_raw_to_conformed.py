@@ -21,11 +21,9 @@ args = getResolvedOptions(
     [
         'JOB_NAME',
         'target_databasename',
-        'target_tablename',
         'target_bucketname',
         'source_bucketname',
         'source_key',
-        'source_system_name',
         'base_file_name',
         'p_year',
         'p_month',

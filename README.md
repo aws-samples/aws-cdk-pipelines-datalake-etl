@@ -222,7 +222,10 @@ Below lists steps are required before starting the job testing:
 
 ### Steps for ETL testing
 
-1. Upload downloaded file `yellow_tripdata_2020-01.csv` to Raw bucket `s3://{target_environment.lower()}-{resource_name_prefix}-{self.account}-{self.region}-raw/tlc_taxi_data/yellow_taxi_trip_record/`
+1. Go to raw S3 bucket and perform the following steps:
+    1. create a folder with name ```tlc_taxi_data``` and go to it
+    1. create a folder with name ```yellow_taxi_trip_record``` and go to it
+    1. upload the file `yellow_tripdata_2020-01.csv`
 
 1. Upon successful load of file S3 event notification will trigger the lambda
 
