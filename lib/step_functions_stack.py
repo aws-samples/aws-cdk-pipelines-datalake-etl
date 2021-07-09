@@ -15,7 +15,8 @@ import aws_cdk.aws_stepfunctions as stepfunctions
 import aws_cdk.aws_stepfunctions_tasks as stepfunctions_tasks
 
 from .configuration import (
-    AVAILABILITY_ZONE_1, AVAILABILITY_ZONE_2, AVAILABILITY_ZONE_3, ROUTE_TABLE_1, ROUTE_TABLE_2, ROUTE_TABLE_3,
+    AVAILABILITY_ZONE_1, AVAILABILITY_ZONE_2, AVAILABILITY_ZONE_3, 
+    ROUTE_TABLE_1, ROUTE_TABLE_2, ROUTE_TABLE_3,
     S3_RAW_BUCKET, SUBNET_ID_1, SUBNET_ID_2, SUBNET_ID_3, SHARED_SECURITY_GROUP_ID, VPC_ID,
     get_environment_configuration, get_logical_id_prefix, get_resource_name_prefix, 
     S3_CONFORMED_BUCKET
@@ -152,7 +153,7 @@ class StepFunctionsStack(cdk.Stack):
             f'{target_environment}{logical_id_prefix}GlueRawJobTask',
             glue_job_name=raw_to_conformed_job.name,
             arguments=stepfunctions.TaskInput.from_object({
-                '--JOB_NAME.$': '$.JOB_NAME',
+                # '--JOB_NAME.$': '$.JOB_NAME',
                 '--target_databasename.$': '$.target_databasename',
                 '--target_bucketname.$': '$.target_bucketname',
                 '--source_bucketname.$': '$.source_bucketname',
@@ -163,18 +164,17 @@ class StepFunctionsStack(cdk.Stack):
                 '--p_day.$': '$.p_day',
                 '--table_name.$': '$.table_name'
             }),
+            output_path='$',
             comment='Raw to conformed data load',
         )
         
-        glue_raw_task.add_catch(failure_function_task, result_path='$.taskresult')
+        glue_raw_task.add_catch(failure_function_task, result_path='$.taskresult', output_path='$',)
 
         glue_conformed_task = stepfunctions_tasks.GlueStartJobRun(
             self,
             f'{target_environment}{logical_id_prefix}GlueConformedJobTask',
             glue_job_name=conformed_to_purpose_built_job.name,
             arguments=stepfunctions.TaskInput.from_object({
-                '--source_key.$': '$.source_key',
-                '--source_system_name.$': '$.source_system_name',
                 '--table_name.$': '$.table_name',
                 '--source_bucketname.$': '$.source_bucketname',
                 '--base_file_name.$': '$.base_file_name',
@@ -182,9 +182,10 @@ class StepFunctionsStack(cdk.Stack):
                 '--p_month.$': '$.p_month',
                 '--p_day.$': '$.p_day'
             }),
+            output_path='$',
             comment='Conformed to purpose-built data load',
         )
-        glue_conformed_task.add_catch(failure_function_task, result_path='$.taskresult')
+        glue_conformed_task.add_catch(failure_function_task, result_path='$.taskresult', output_path='$',)
 
         machine_definition = glue_raw_task.next(
             glue_conformed_task.next(success_function_task)

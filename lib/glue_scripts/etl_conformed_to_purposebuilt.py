@@ -23,13 +23,8 @@ args = getResolvedOptions(
         'JOB_NAME',
         'txn_bucket_name',
         'txn_sql_prefix_path',
-        'dynamodb_tablename',
         'target_databasename',
-        'target_tablename',
         'target_bucketname',
-        'source_bucketname',
-        'source_key',
-        'source_system_name',
         'base_file_name',
         'p_year',
         'p_month',
@@ -173,7 +168,6 @@ def add_partition(rec):
     """
     Function to add partition
     """
-
     partition_path = f'{args["p_year"]}/{args["p_month"]}/{args["p_day"]}'
     rec['year'] = args['p_year']
     rec['month'] = args['p_month']

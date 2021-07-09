@@ -150,7 +150,7 @@ class GlueStack(cdk.Stack):
             default_arguments={
                 '--enable-glue-datacatalog': '""',
                 '--target_database_name': 'datablog_conformed_arg',
-                '--target_bucket': purposebuilt_bucket.bucket_name,
+                '--target_bucketname': purposebuilt_bucket.bucket_name,
                 '--target_table_name': 'datablog_nyc_purposebuilt',
                 '--txn_bucket_name': glue_scripts_bucket.bucket_name,
                 '--txn_sql_prefix_path': '/etl/transformation-sql/',
