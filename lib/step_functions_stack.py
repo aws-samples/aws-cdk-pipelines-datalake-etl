@@ -165,6 +165,7 @@ class StepFunctionsStack(cdk.Stack):
                 '--table_name.$': '$.table_name'
             }),
             output_path='$',
+            result_path='$.taskresult',
             comment='Raw to conformed data load',
         )
         
@@ -183,6 +184,7 @@ class StepFunctionsStack(cdk.Stack):
                 '--p_day.$': '$.p_day'
             }),
             output_path='$',
+            result_path='$.taskresult',
             comment='Conformed to purpose-built data load',
         )
         glue_conformed_task.add_catch(failure_function_task, result_path='$.taskresult',)
