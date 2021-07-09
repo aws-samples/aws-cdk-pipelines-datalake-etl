@@ -77,6 +77,7 @@ def lambda_handler(event, context):
     p_base_file_name = os.path.basename(p_full_path)
     sfn_arn = os.environ['SFN_STATE_MACHINE_ARN']
     target_bucket_name = os.environ['target_bucket_name']
+    raw_to_conformed_etl_job_name = 'raw_to_conformed_etl_job'
 
     logger.info('bucket: ' + source_bucket_name)
     logger.info('key: ' + key)
@@ -103,16 +104,13 @@ def lambda_handler(event, context):
         logger.info('year: ' + p_year)
         logger.info('p_month: ' + p_month)
         logger.info('p_day: ' + p_day)
-
         logger.info('sfn name: ' + p_base_file_name + '-' + p_stp_fn_time)
-
         sfn_name = p_base_file_name + '-' + p_stp_fn_time
         print('before step function')
-        
-
         execution_id = str(uuid.uuid4())
         sfn_input = json.dumps(
             {
+                'JOB_NAME': raw_to_conformed_etl_job_name,
                 'target_databasename': p_source_system_name,
                 'target_bucketname': target_bucket_name,
                 'source_bucketname': source_bucket_name,

@@ -17,7 +17,8 @@ import aws_cdk.aws_stepfunctions_tasks as stepfunctions_tasks
 from .configuration import (
     AVAILABILITY_ZONE_1, AVAILABILITY_ZONE_2, AVAILABILITY_ZONE_3, ROUTE_TABLE_1, ROUTE_TABLE_2, ROUTE_TABLE_3,
     S3_RAW_BUCKET, SUBNET_ID_1, SUBNET_ID_2, SUBNET_ID_3, SHARED_SECURITY_GROUP_ID, VPC_ID,
-    get_environment_configuration, get_logical_id_prefix, get_resource_name_prefix
+    get_environment_configuration, get_logical_id_prefix, get_resource_name_prefix, 
+    S3_CONFORMED_BUCKET
 )
 
 
@@ -58,6 +59,7 @@ class StepFunctionsStack(cdk.Stack):
         route_tables_output_1 = cdk.Fn.import_value(self.mappings[ROUTE_TABLE_1])
         route_tables_output_2 = cdk.Fn.import_value(self.mappings[ROUTE_TABLE_2])
         route_tables_output_3 = cdk.Fn.import_value(self.mappings[ROUTE_TABLE_3])
+        conformed_s3_bucket_id = cdk.Fn.import_value(self.mappings[S3_CONFORMED_BUCKET])
         # Manually construct the VPC because it lives in the target account,
         # not the Deployment Util account where the synth is ran
         vpc = ec2.Vpc.from_vpc_attributes(
@@ -150,9 +152,9 @@ class StepFunctionsStack(cdk.Stack):
             f'{target_environment}{logical_id_prefix}GlueRawJobTask',
             glue_job_name=raw_to_conformed_job.name,
             arguments=stepfunctions.TaskInput.from_object({
-                '--JOB_NAME.$': 'raw_to_conformed_etl_job',
+                '--JOB_NAME.$': '$.JOB_NAME',
                 '--target_databasename.$': '$.target_databasename',
-                '--target_bucketname.$': 'TBA',
+                '--target_bucketname.$': '$.target_bucketname',
                 '--source_bucketname.$': '$.source_bucketname',
                 '--source_key.$': '$.source_key',
                 '--base_file_name.$': '$.base_file_name',
@@ -205,6 +207,7 @@ class StepFunctionsStack(cdk.Stack):
             environment={
                 'DYNAMODB_TABLE_NAME': job_audit_table.table_name,
                 'SFN_STATE_MACHINE_ARN': machine.state_machine_arn,
+                'target_bucket_name': conformed_s3_bucket_id,
             },
             security_groups=[shared_security_group],
             vpc=vpc,
