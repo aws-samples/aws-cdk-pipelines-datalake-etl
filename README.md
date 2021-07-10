@@ -109,10 +109,12 @@ Figure below illustrates the continuous delivery of ETL jobs on Data Lake.
 
 There are few interesting details to point out here:
 
-1. DevOps administrator checks in the initial code
-1. DevOps administrator performs a one-time `cdk deploy --all` to deploy the data lake infrastructure to all target environments
-1. CDK pipelines executes a multi-stage pipeline that includes, cloning the source code from GitHub repo, build the code, publish artifacts to S3 bucket, executes one or more stages/ Deployment of infrastructure resources is one of the stages
-1. CDK pipelines deploy the resources to dev, test, and prod environments
+1. The DevOps administrator checks in the code to the repository.
+1. The DevOps administrator (with elevated access) facilitates a one-time manual deployment on a target environment. Elevated access includes administrative privileges on the central deployment account and target AWS environments.
+1. CodePipeline periodically listens to commit events on the source code repositories. This is the self-mutating nature of CodePipeline. It’s configured to work with and is able to update itself according to the provided definition.
+1. Code changes made to the main branch of the repo are automatically deployed to the dev environment of the data lake.
+1. Code changes to the test branch of the repo are automatically deployed to the test environment.
+1. Code changes to the prod branch of the repo are automatically deployed to the prod environment.
 
 ---
 
@@ -177,10 +179,15 @@ Configure your AWS profile to target the central Deployment account as an Admini
    ```
 
 1. Run the command ```cdk deploy --all```
-1. Expected output:
-    1. It creates new Pipelines in CodePipeline in the Deployment account
-    1. It creates one or more CloudFormation Stacks in target AWS Account
-    1. In the target AWS account, all AWS resources constituted by the CloudFormation stack will be provisioned
+1. Expected outputs:
+
+    1. In deployment account, the following CodePipelines created successfully
+
+       ![Alt](./resources/cdk_pipelines_deployment_account.png)
+
+    1. In Dev environment's CloudFormation console, the following stacks created successfully
+
+       ![Alt](./resources/cdk_pipelines_datalake_etl_cdk_deploy_all_dev_output.png)
 
 ---
 
