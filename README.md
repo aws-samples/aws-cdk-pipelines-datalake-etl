@@ -1,6 +1,6 @@
-# AWS CDK Pipelines for Data Lake ETL Deployment
+# CDK Pipelines for Data Lake ETL Deployment
 
-This solution helps you deploy ETL processes on data lake using [AWS CDK Pipelines](https://docs.aws.amazon.com/cdk/latest/guide/cdk_pipeline.html).
+This solution helps you deploy ETL processes on data lake using [AWS CDK Pipelines](https://docs.aws.amazon.com/cdk/latest/guide/cdk_pipeline.html). This is based on AWS blog [Deploy data lake ETL jobs using CDK Pipelines](https://aws.amazon.com/blogs/devops/deploying-data-lake-etl-jobs-using-cdk-pipelines/). We recommend you to read the blog before you proceed with the solution.
 
 [CDK Pipelines](https://docs.aws.amazon.com/cdk/api/latest/docs/pipelines-readme.html) is a construct library module for painless continuous delivery of CDK applications. CDK stands for Cloud Development Kit. It is an open source software development framework to define your cloud application resources using familiar programming languages.
 
