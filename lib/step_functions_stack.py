@@ -157,7 +157,7 @@ class StepFunctionsStack(cdk.Stack):
             glue_job_name=raw_to_conformed_job.name,
             arguments=stepfunctions.TaskInput.from_object({
                 # '--JOB_NAME.$': '$.JOB_NAME',
-                '--target_databasename.$': '$.target_databasename',
+                '--target_database_name.$': '$.target_database_name',
                 '--target_bucketname.$': '$.target_bucketname',
                 '--source_bucketname.$': '$.source_bucketname',
                 '--source_key.$': '$.source_key',

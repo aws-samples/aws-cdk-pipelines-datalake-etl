@@ -112,7 +112,7 @@ def lambda_handler(event, context):
         sfn_input = json.dumps(
             {
                 'JOB_NAME': raw_to_conformed_etl_job_name,
-                'target_databasename': p_source_system_name,
+                'target_database_name': p_source_system_name,
                 'target_bucketname': target_bucket_name,
                 'source_bucketname': source_bucket_name,
                 'source_key': p_file_dir_upd, 

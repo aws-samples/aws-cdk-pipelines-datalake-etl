@@ -7,22 +7,23 @@ import setuptools
 with open("README.md") as fp:
     long_description = fp.read()
 
+
 setuptools.setup(
-    name="aws_cdk_pipelines_blog_datalake_etl",
-    version="0.0.1",
-    description="A CDK Python app for deploying ETL jobs that utilize a Data Lake in AWS",
+    name="aws_cdk_pipelines_blog_datalake_infrastructure_upgraded",
+    version="0.0.2",
+    description="A CDK Python app for deploying foundational infrastructure for a Data Lake in AWS",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    author="Zahid Muhammad Ali <zhidli@amazon.com>, Isaiah Grant <igrant@2ndwatch.com>, Ravi Itha <itharav@amazon.com>",
+    author="Isaiah Grant <igrant@2ndwatch.com>, Ravi Itha <itharav@amazon.com>, Zahid Muhammad Ali <zhidli@amazon.com>",
     packages=setuptools.find_packages(),
     install_requires=[
-        "aws-cdk.core~=1.110.0",
+        "aws-cdk-lib>=2.27.0",
+        "constructs>=10.1.0",
     ],
     python_requires=">=3.6",
     classifiers=[
         "Development Status :: 4 - Beta",
         "Intended Audience :: Developers",
-        "License :: OSI Approved :: Apache Software License",
         "Programming Language :: JavaScript",
         "Programming Language :: Python :: 3 :: Only",
         "Programming Language :: Python :: 3.6",

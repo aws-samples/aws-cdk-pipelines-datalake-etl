@@ -1,8 +1,8 @@
 # Copyright 2021 Amazon.com, Inc. or its affiliates. All Rights Reserved.
 # SPDX-License-Identifier: MIT-0
 
-from aws_cdk import core
-
+import aws_cdk as cdk
+from constructs import Construct
 from .step_functions_stack import StepFunctionsStack
 from .glue_stack import GlueStack
 from .dynamodb_stack import DynamoDbStack
@@ -12,12 +12,12 @@ from .configuration import (
 )
 
 
-class PipelineDeployStage(core.Stage):
-    def __init__(self, scope: core.Construct, construct_id: str, target_environment: str, **kwargs):
+class PipelineDeployStage(cdk.Stage):
+    def __init__(self, scope: Construct, construct_id: str, target_environment: str, deployment_account_id: str, env=None, **kwargs):
         """
         Adds deploy stage to CodePipeline
 
-        @param scope cdk.Construct: Parent of this stack, usually an App or a Stage, but could be any construct.
+        @param scope Construct: Parent of this stack, usually an App or a Stage, but could be any construct.
         @param construct_id str:
             The construct ID of this stack. If stackName is not explicitly defined,
             this id (and any parent IDs) will be used to determine the physical ID of the stack.
@@ -31,6 +31,7 @@ class PipelineDeployStage(core.Stage):
             self,
             f'{target_environment}{logical_id_prefix}EtlDynamoDb',
             target_environment=target_environment,
+            env=env,
             **kwargs,
         )
 
@@ -38,6 +39,7 @@ class PipelineDeployStage(core.Stage):
             self,
             f'{target_environment}{logical_id_prefix}EtlGlue',
             target_environment=target_environment,
+            env=env,
             **kwargs,
         )
 
@@ -45,6 +47,7 @@ class PipelineDeployStage(core.Stage):
             self,
             f'{target_environment}{logical_id_prefix}EtlStepFunctions',
             target_environment=target_environment,
+            env=env,
             raw_to_conformed_job=glue_stack.raw_to_conformed_job,
             conformed_to_purpose_built_job=glue_stack.conformed_to_purpose_built_job,
             job_audit_table=dynamodb_stack.job_audit_table,
