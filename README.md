@@ -6,11 +6,11 @@ This solution helps you deploy ETL processes on data lake using [AWS CDK Pipelin
 
 This solution helps you to:
 
-1. deploy ETL jobs on data lake
-1. build CDK applications for your ETL workloads
-1. deploy ETL jobs from a central deployment account to multiple AWS environments such as dev, test, and prod
-1. leverage the benefit of self-mutating feature of CDK Pipelines. For example, whenever you check your CDK app's source code in to your version control system, CDK Pipelines can automatically build, test, and deploy your new version
-1. increase the speed of prototyping, testing, and deployment of new ETL jobs
+1. Deploy ETL jobs on data lake
+1. Build CDK applications for your ETL workloads
+1. Deploy ETL jobs from a central deployment account to multiple AWS environments such as dev, test, and prod
+1. Leverage the benefit of self-mutating feature of CDK Pipelines. For example, whenever you check your CDK app's source code in to your version control system, CDK Pipelines can automatically build, test, and deploy your new version
+1. Increase the speed of prototyping, testing, and deployment of new ETL jobs
 
 ---
 
@@ -61,9 +61,9 @@ Now we have the Data Lake design, let's deploy its infrastructure. You can use [
 
 ---
 
-### ETL use case
+### ETL Use-case
 
-To demonstrate the above benefits, we will use [NYC Taxi and Limousine Commission Data](https://www1.nyc.gov/site/tlc/about/tlc-trip-record-data.page) and build a sample ETL process for this. In our Data Lake, we have three S3 buckets - Raw, Conformed, and Purpose-built.
+To demonstrate the above benefits, we will use NYC Taxi and Limousine Commission data available on [NYC Open Data](https://data.cityofnewyork.us/browse?q=trip%20data&sortBy=relevance) and build a sample ETL process for this. In our Data Lake, we have three S3 buckets - Raw, Conformed, and Purpose-built.
 
 Figure below represents the infrastructure resources we provision for Data Lake.
 
@@ -87,13 +87,13 @@ Figure below represents the infrastructure resources we provision for Data Lake.
 
 ---
 
-## The solution
+## The Solution
 
 We use a centralized deployment model to deploy data lake infrastructure across dev, test, and prod environments.
 
 ---
 
-### Centralized deployment
+### Centralized Deployment
 
 Let us see how we deploy data lake ETL workloads from a central deployment account to multiple AWS environments such as dev, test, and prod. As shown in the figure below, we organize **Data Lake ETL source code** into three branches - dev, test, and production. We use a dedicated AWS account to create CDK Pipelines. Each branch is mapped to a CDK pipeline and it turn mapped to a target environment. This way, code changes made to the branches are deployed iteratively to their respective target environment.
 
@@ -101,7 +101,7 @@ Let us see how we deploy data lake ETL workloads from a central deployment accou
 
 ---
 
-## Continuous delivery of ETL jobs using CDK Pipelines
+## Continuous Delivery of ETL Jobs Using CDK Pipelines
 
 Figure below illustrates the continuous delivery of ETL jobs on Data Lake.
 
@@ -118,7 +118,7 @@ There are few interesting details to point out here:
 
 ---
 
-### Source code structure
+### Source Code Structure
 
 Table below explains how this source ode structured:
 
@@ -144,11 +144,11 @@ This section provides deployment instructions.
 
 ---
 
-### Setup infrastructure and bootstrap AWS accounts
+### Setup Infrastructure and Bootstrap AWS Accounts
 
 This project is dependent on the [AWS CDK Pipelines for Data Lake Infrastructure Deployment](https://github.com/aws-samples/aws-cdk-pipelines-datalake-infrastructure). Please reference the [Prerequisites section in README](https://github.com/aws-samples/aws-cdk-pipelines-datalake-infrastructure#prerequisites).
 
-### Deploying for the first time
+### First Time Deployment
 
 Configure your AWS profile to target the central Deployment account as an Administrator and perform the following steps:
 
@@ -207,32 +207,32 @@ This section provides testing instructions.
 
 Below lists steps are required before starting the job testing:
 
-1. **Note:** We use [New York City TLC Trip Record Data.](https://www1.nyc.gov/site/tlc/about/tlc-trip-record-data.page)
+1. **Note:** We use New York City TLC Trip Record data from [NYC Open Data](https://data.cityofnewyork.us/browse?q=trip%20data&sortBy=relevance)
 
-1. Download Yellow Taxi Trip Records for [August-2020](https://nyc-tlc.s3.amazonaws.com/trip+data/yellow_tripdata_2020-08.csv)
-
-1. Make sure the transformation logic is entered in dynamodb for <> table. As part of job creation mentioned transformation logic will be used to transform data from raw to conform:
-
-   ```sql
-   SELECT count(*) count, coalesce(vendorid,-1) vendorid, day, month, year, pulocationid, dolocationid, payment_type, sum(passenger_count) passenger_count, sum(trip_distance) total_trip_distance, sum(fare_amount) total_fare_amount, sum(extra) total_extra, sum(tip_amount) total_tip_amount, sum(tolls_amount) total_tolls_amount, sum(total_amount) total_amount
-   FROM datalake_raw_source.yellow_taxi_trip_record
-   GROUP BY vendorid, day, month, year, day, month, year, pulocationid, dolocationid, payment_type;
-   ```
+1. Download Yellow Taxi Trip Data for [2021](https://data.cityofnewyork.us/Transportation/2021-Yellow-Taxi-Trip-Data/m6nq-qud6). You may also choose to use previous years' data.
 
 1. Create a folder under raw bucket `{target_environment.lower()}-{resource_name_prefix}-{self.account}-{self.region}-raw` root path, this folder name will be used as source_system_name. You can use `tlc_taxi_data` or name of your choice.
 
-1. Go to the created folder and create child folder named `yellow_taxi_trip_record` or you can name it per your choice
+1. Go to the created folder and create child folder named `yellow_taxi_trip_record` or you can name it per your choice.
+
+1. The transformation logic will be stored in an S3 bucket. As part of job creation mentioned transformation logic will be used to transform data from raw to conform:
+
+   ```sql
+   SELECT count(*) count, coalesce(vendorid,-1) vendorid, day, month, year, pulocationid, dolocationid, payment_type, sum(passenger_count) passenger_count, sum(trip_distance) total_trip_distance, sum(fare_amount) total_fare_amount, sum(extra) total_extra, sum(tip_amount) total_tip_amount, sum(tolls_amount) total_tolls_amount, sum(total_amount) total_amount
+   FROM tlc_taxi_data.yellow_taxi_trip_record
+   GROUP BY vendorid, day, month, year, day, month, year, pulocationid, dolocationid, payment_type;
+   ```
 
 1. Configure Athena workgroup before you run queries via Amazon Athena. For more details, refer [Setting up Athena Workgroups](https://docs.aws.amazon.com/athena/latest/ug/workgroups-procedure.html).
 
 ---
 
-### Steps for ETL testing
+### Steps for ETL Testing
 
 1. Go to raw S3 bucket and perform the following steps:
     1. create a folder with name ```tlc_taxi_data``` and go to it
     1. create a folder with name ```yellow_taxi_trip_record``` and go to it
-    1. upload the file `yellow_tripdata_2020-01.csv`
+    1. upload the file `2021_Yellow_Taxi_Trip_Data.csv`
 
 1. Upon successful load of file S3 event notification will trigger the lambda
 
@@ -261,18 +261,18 @@ Below lists steps are required before starting the job testing:
 1. To validate the data, please open Athena service and execute query. For testing purpose below mentioned query is being used 
 
    ```sql
-   SELECT * FROM "datablog_arg"."yellow_taxi_trip_record" limit 10;
+   SELECT * FROM "tlc_taxi_data"."yellow_taxi_trip_record" limit 10;
    ```
 
-1. For testing of `second data source`, Download Green Taxi Trip Records for [August-2020](https://nyc-tlc.s3.amazonaws.com/trip+data/green_tripdata_2020-08.csv)
+1. For testing of `second data source`, download Green Taxi Trip Data for [2021](https://data.cityofnewyork.us/Transportation/2021-Green-Taxi-Trip-Data/djnb-wcxt)
 
-1. Perform the prerequisites for second source, where create child folder `yellow_taxi_trip_record` under could be `tlc_taxi_data` in `s3://{target_environment.lower()}-{resource_name_prefix}-{self.account}-{self.region}-raw`
+1. Perform the prerequisites for second source, where create child folder `green_taxi_trip_record` under could be `tlc_taxi_data` in `s3://{target_environment.lower()}-{resource_name_prefix}-{self.account}-{self.region}-raw`
 
-1. For dynamodb transformation logic you can use the below mentioned query:
+1. For the transformation logic you can use the below mentioned query:
 
    ```sql
    SELECT count(*) count, coalesce(vendorid,-1) vendorid, day, month, year, pulocationid, dolocationid, payment_type, sum(passenger_count) passenger_count, sum(trip_distance) total_trip_distance, sum(fare_amount) total_fare_amount, sum(extra) total_extra, sum(tip_amount) total_tip_amount, sum(tolls_amount) total_tolls_amount, sum(total_amount) total_amount
-   FROM datalake_raw_source.green_taxi_record_data
+   FROM tlc_taxi_data.green_taxi_record_data
    GROUP BY vendorid, day, month, year, day, month, year, pulocationid, dolocationid, payment_type
    ```
 
@@ -284,7 +284,7 @@ In this section, we provide some additional resources.
 
 ---
 
-### Clean up
+### Clean-up
 
 1. Delete stacks using the command ```cdk destroy --all```. When you see the following text, enter **y**, and press enter/return.
 
@@ -322,7 +322,7 @@ Refer to [cdk_instructions.md](./resources/cdk_instructions.md) for detailed ins
 
 ---
 
-### Developer guide
+### Developer Guide
 
 Refer to [Developer Guide](resources/developer_guide.md) for more information on this project
 
