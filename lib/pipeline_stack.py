@@ -25,7 +25,7 @@ class PipelineStack(cdk.Stack):
         """
         CloudFormation stack to create CDK Pipeline resources (Code Pipeline, Code Build, and ancillary resources).
 
-        @param scope cdk.Construct: Parent of this stack, usually an App or a Stage, but could be any construct.
+        @param scope Construct: Parent of this stack, usually an App or a Stage, but could be any construct.
         @param construct_id str:
             The construct ID of this stack. If stackName is not explicitly defined,
             this id (and any parent IDs) will be used to determine the physical ID of the stack.
@@ -56,7 +56,7 @@ class PipelineStack(cdk.Stack):
         resource_name_prefix = get_resource_name_prefix()
 
         code_build_env = CodeBuild.BuildEnvironment(
-            build_image= CodeBuild.LinuxBuildImage.STANDARD_5_0, #from_code_build_image_id("aws/codebuild/amazonlinux2-x86_64-standard:4.0"), #BuildImageConfig. .IBuildImage(),
+            build_image= CodeBuild.LinuxBuildImage.STANDARD_5_0,
             privileged = False
         )
         

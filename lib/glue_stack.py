@@ -98,14 +98,6 @@ class GlueStack(cdk.Stack):
             s3_kms_key,
         )
 
-        # job_connection = glue.Connection(
-        #     self,
-        #     f'{target_environment}{logical_id_prefix}RawToConformedWorkflowConnection',
-        #     type=glue.ConnectionType.NETWORK,
-        #     connection_name=f'{target_environment.lower()}-{resource_name_prefix}-raw-to-conformed-connection',
-        #     security_groups=[shared_security_group],
-        #     subnet=subnet
-        # )
         job_connection = glue.CfnConnection(
             self,
             f'{target_environment}{logical_id_prefix}RawToConformedWorkflowConnection',
