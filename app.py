@@ -35,7 +35,7 @@ if os.environ.get('ENV', DEV) == DEV:
     }
     dev_pipeline_stack = PipelineStack(
         app,
-        f'{target_environment}{logical_id_prefix}InfrastructurePipeline',
+        f'{target_environment}{logical_id_prefix}EtlPipeline',
         target_environment=DEV,
         target_branch='cdkv2',
         target_aws_env=dev_aws_env,
@@ -53,7 +53,7 @@ if os.environ.get('ENV', TEST) == TEST:
     }
     test_pipeline_stack = PipelineStack(
         app,
-        f'{target_environment}{logical_id_prefix}InfrastructurePipeline',
+        f'{target_environment}{logical_id_prefix}EtlPipeline',
         target_environment=TEST,
         target_branch='test',
         target_aws_env=test_aws_env,
@@ -71,7 +71,7 @@ if os.environ.get('ENV', PROD) == PROD:
     }
     prod_pipeline_stack = PipelineStack(
         app,
-        f'{target_environment}{logical_id_prefix}InfrastructurePipeline',
+        f'{target_environment}{logical_id_prefix}EtlPipeline',
         target_environment=PROD,
         target_branch='prod',
         target_aws_env=prod_aws_env,

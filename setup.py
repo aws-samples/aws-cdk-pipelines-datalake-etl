@@ -9,9 +9,9 @@ with open("README.md") as fp:
 
 
 setuptools.setup(
-    name="aws_cdk_pipelines_blog_datalake_infrastructure_upgraded",
+    name="aws_cdk_pipelines_blog_datalake_etl_upgraded",
     version="0.0.2",
-    description="A CDK Python app for deploying foundational infrastructure for a Data Lake in AWS",
+    description="A CDK Python app for deploying ETL jobs that utilize a Data Lake in AWS",
     long_description=long_description,
     long_description_content_type="text/markdown",
     author="Isaiah Grant <igrant@2ndwatch.com>, Ravi Itha <itharav@amazon.com>, Zahid Muhammad Ali <zhidli@amazon.com>",

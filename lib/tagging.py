@@ -39,7 +39,7 @@ def get_tag(tag_name, target_environment) -> dict:
     tag_map = {
         COST_CENTER: [
             f'{resource_name_prefix}:cost-center',
-            f'{logical_id_prefix}Infrastructure',
+            f'{logical_id_prefix}Etl',
         ],
         TAG_ENVIRONMENT: [
             f'{resource_name_prefix}:environment',
@@ -51,7 +51,7 @@ def get_tag(tag_name, target_environment) -> dict:
         ],
         APPLICATION: [
             f'{resource_name_prefix}:application',
-            f'{logical_id_prefix}Infrastructure',
+            f'{logical_id_prefix}Etl',
         ],
     }
     if tag_name not in tag_map:

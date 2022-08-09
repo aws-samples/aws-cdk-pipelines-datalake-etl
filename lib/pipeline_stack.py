@@ -64,7 +64,7 @@ class PipelineStack(cdk.Stack):
             build_environment=code_build_env,
             role_policy=[
                     iam.PolicyStatement(
-                        sid='InfrastructurePipelineSecretsManagerPolicy',
+                        sid='EtlPipelineSecretsManagerPolicy',
                         effect=iam.Effect.ALLOW,
                         actions=[
                             'secretsmanager:*',
@@ -74,7 +74,7 @@ class PipelineStack(cdk.Stack):
                         ],
                     ),
                     iam.PolicyStatement(
-                        sid='InfrastructurePipelineSTSAssumeRolePolicy',
+                        sid='EtlPipelineSTSAssumeRolePolicy',
                         effect=iam.Effect.ALLOW,
                         actions=[
                             'sts:AssumeRole',
@@ -84,7 +84,7 @@ class PipelineStack(cdk.Stack):
                         ],
                     ),
                     iam.PolicyStatement(
-                        sid='InfrastructurePipelineKmsPolicy',
+                        sid='EtlPipelineKmsPolicy',
                         effect=iam.Effect.ALLOW,
                         actions=[
                             'kms:*',
@@ -94,7 +94,7 @@ class PipelineStack(cdk.Stack):
                         ],
                     ),
                     iam.PolicyStatement(
-                        sid='InfrastructurePipelineVpcPolicy',
+                        sid='EtlPipelineVpcPolicy',
                         effect=iam.Effect.ALLOW,
                         actions=[
                             'vpc:*',
@@ -104,7 +104,7 @@ class PipelineStack(cdk.Stack):
                         ],
                     ),
                     iam.PolicyStatement(
-                        sid='InfrastructurePipelineEc2Policy',
+                        sid='EtlPipelineEc2Policy',
                         effect=iam.Effect.ALLOW,
                         actions=[
                             'ec2:*',
