@@ -118,8 +118,8 @@ class PipelineStack(cdk.Stack):
 
         pipeline = Pipelines.CodePipeline(
             self,
-            f'{target_environment}{logical_id_prefix}InfrastructurePipeline',
-            pipeline_name=f'{target_environment.lower()}-{resource_name_prefix}-infrastructure-pipeline',
+            f'{target_environment}{logical_id_prefix}DatalakeEtlPipeline',
+            pipeline_name=f'{target_environment.lower()}-{resource_name_prefix}-datalake-etl-pipeline',
             code_build_defaults=code_build_opt,
             self_mutation=True,
             synth=Pipelines.ShellStep(
