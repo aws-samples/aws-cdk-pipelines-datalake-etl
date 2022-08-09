@@ -37,7 +37,7 @@ if os.environ.get('ENV', DEV) == DEV:
         app,
         f'{target_environment}{logical_id_prefix}EtlPipeline',
         target_environment=DEV,
-        target_branch='cdkv2',
+        target_branch='dev',
         target_aws_env=dev_aws_env,
         env=deployment_aws_env,
     )
